@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- 定义文档的字符编码，确保正确显示各种字符，避免乱码问题 -->
+    <meta charset="UTF-8" />
+
+    <!-- 设置网页的图标，浏览器标签页和书签中会显示该图标 -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- 视口设置，确保网页在移动端设备上正确缩放和显示 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      - width=device-width：页面宽度与设备屏幕宽度相等
+      - initial-scale=1.0：初始缩放比例为 1，表示不放大或缩小页面
+    -->
+
+    <!-- 定义网页的标题，显示在浏览器标签页上 -->
+    <title>Vite + Vue</title>
+</head>
+
+<body>
+<!-- Vue 应用的挂载点，Vue 会将渲染的内容注入到这个 div 中 -->
+<div id="app"></div>
+<!-- 在 main.js 中，Vue 会将 App 组件挂载到 #app 元素上 -->
+<!-- 对应 main.js 中的代码：
+     createApp(App).mount('#app')
+-->
+
+<!-- 引入 JavaScript 模块，Vite 会处理这个入口文件 -->
+<script type="module" src="/src/main.js"></script>
+<!--
+  - type="module"：启用 ES6 模块化，允许使用 import/export 语法
+  - src="/src/main.js"：指定入口文件路径，Vue 应用的启动点
+-->
+</body>
+</html>
+

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue 内容渲染指令示例</title>
+    <!-- 引入 Vue 3 -->
+    <script src="https://unpkg.com/vue@3"></script>
+</head>
+<body>
+<!-- Vue 控制的 DOM 区域 -->
+<div id="app">
+    <p>姓名：{{ username }}</p>       <!-- 数据绑定：展示用户名 -->
+    <p>性别：{{ gender }}</p>          <!-- 数据绑定：展示性别 -->
+
+    <!-- 使用插值表达式绑定描述 -->
+    <p>{{ desc }}</p>
+
+    <!-- 使用 v-html 指令渲染 HTML 内容 -->
+    <p v-html="desc"></p>
+</div>
+
+<!-- Vue 实例 -->
+<script>
+    const vm = {
+        data() {
+            return {
+                username: 'zhangsan',             // 用户名
+                gender: '男',                      // 性别
+                desc: '<strong>这是一段加粗的描述文本。</strong>'  // 描述（包含 HTML 标签）
+            };
+        }
+    };
+
+    // 创建 Vue 应用并挂载到 #app
+    Vue.createApp(vm).mount('#app');
+</script>
+</body>
+</html>
+
+
+

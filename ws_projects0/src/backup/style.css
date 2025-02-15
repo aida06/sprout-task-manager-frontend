@@ -1,0 +1,121 @@
+/* ===============================
+   全局样式定义
+   =============================== */
+
+:root {
+  /* 定义全局字体，按顺序优先选择：Inter → system-ui → Avenir → Helvetica → Arial → sans-serif */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;          /* 设置文本的行高，提升可读性 */
+  font-weight: 400;          /* 默认字体粗细为正常（400） */
+
+  /* 颜色主题，支持亮色和暗色模式自动切换 */
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);    /* 文字颜色：半透明白色，适应暗色背景 */
+  background-color: #242424;           /* 背景色：深灰色（暗色模式默认背景） */
+
+  /* 字体优化设置，提高渲染效果 */
+  font-synthesis: none;                /* 禁用浏览器自动合成斜体或粗体 */
+  text-rendering: optimizeLegibility;  /* 提高文本的可读性 */
+  -webkit-font-smoothing: antialiased; /* 使字体在 macOS 上更加平滑 */
+  -moz-osx-font-smoothing: grayscale;  /* 使字体在 Firefox 上平滑显示 */
+}
+
+/* ===============================
+   链接样式
+   =============================== */
+
+a {
+  font-weight: 500;         /* 链接文字稍微加粗 */
+  color: #646cff;           /* 链接默认颜色：浅蓝色 */
+  text-decoration: inherit; /* 继承父元素的文本装饰（通常去掉下划线） */
+}
+
+a:hover {
+  color: #535bf2;           /* 当鼠标悬停时，链接颜色变为更深的蓝色 */
+}
+
+/* ===============================
+   页面基础样式
+   =============================== */
+
+body {
+  margin: 0;                /* 去除默认的页面外边距 */
+  display: flex;            /* 使用 Flexbox 布局 */
+  place-items: center;      /* 在水平和垂直方向上居中内容（简化写法，等价于 align-items 和 justify-content） */
+  min-width: 320px;         /* 最小页面宽度，保证在小屏幕设备上不会太窄 */
+  min-height: 100vh;        /* 页面最小高度为视口高度，实现垂直居中 */
+}
+
+/* ===============================
+   标题样式
+   =============================== */
+
+h1 {
+  font-size: 3.2em;         /* 设置一级标题的字体大小为 3.2 倍于默认字体大小 */
+  line-height: 1.1;         /* 控制标题的行高，使其更加紧凑 */
+}
+
+/* ===============================
+   按钮样式
+   =============================== */
+
+button {
+  border-radius: 8px;       /* 设置圆角，增加按钮的柔和感 */
+  border: 1px solid transparent; /* 初始状态下按钮边框透明 */
+  padding: 0.6em 1.2em;     /* 设置内边距，确保按钮有足够的点击区域 */
+  font-size: 1em;           /* 字体大小继承默认设置 */
+  font-weight: 500;         /* 按钮文字加粗，提升可读性 */
+  font-family: inherit;     /* 继承父级的字体设置 */
+  background-color: #1a1a1a;/* 按钮背景色：深灰色 */
+  cursor: pointer;          /* 鼠标悬停时显示手型光标，表明可点击 */
+  transition: border-color 0.25s; /* 边框颜色的过渡动画，持续 0.25 秒 */
+}
+
+button:hover {
+  border-color: #646cff;    /* 鼠标悬停时，边框变为浅蓝色 */
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+  /* 聚焦状态下显示外轮廓，增强可访问性（方便键盘导航用户识别） */
+}
+
+/* ===============================
+   卡片容器样式
+   =============================== */
+
+.card {
+  padding: 2em;             /* 卡片内容的内边距，增加空白区域 */
+}
+
+/* ===============================
+   App 容器样式
+   =============================== */
+
+#app {
+  max-width: 1280px;        /* 页面内容的最大宽度，适配大屏显示 */
+  margin: 0 auto;           /* 自动水平居中 */
+  padding: 2rem;            /* 内容的内边距，避免紧贴边界 */
+  text-align: center;       /* 文字居中对齐 */
+}
+
+/* ===============================
+   媒体查询（适配浅色模式）
+   =============================== */
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;           /* 浅色模式下的文本颜色（深灰色） */
+    background-color: #ffffff;/* 浅色模式下的背景颜色（白色） */
+  }
+
+  a:hover {
+    color: #747bff;           /* 浅色模式下，鼠标悬停的链接颜色 */
+  }
+
+  button {
+    background-color: #f9f9f9;/* 浅色模式下按钮的背景颜色（浅灰色） */
+  }
+}
+

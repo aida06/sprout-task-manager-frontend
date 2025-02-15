@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue v-if, v-else-if, v-else 示例</title>
+    <!-- 引入 Vue 3 -->
+    <script src="https://unpkg.com/vue@3"></script>
+</head>
+<body>
+<div id="app">
+    <!-- 1. 随机数条件判断 -->
+    <p v-if="num > 0.5">随机数 > 0.5 ✅</p>
+    <p v-else>随机数 ≤ 0.5 ❌</p>
+
+    <hr>
+
+    <!-- 2. 多条件分支判断 -->
+    <p v-if="type === 'A'">优秀</p>
+    <p v-else-if="type === 'B'">良好</p>
+    <p v-else-if="type === 'C'">一般</p>
+    <p v-else>差</p>
+
+    <hr>
+
+    <!-- 3. 使用 v-show 控制显示 -->
+    <div v-show="a">
+        测试内容（使用 v-show 控制）
+    </div>
+
+    <!-- 4. 点击按钮切换 v-show 的显示状态 -->
+    <button @click="a = !a">切换显示</button>
+</div>
+
+<script>
+    const vm = {
+        data() {
+            return {
+                // 生成 0 ~ 1 之间的随机数
+                num: Math.random(),
+
+                // 用于条件分支判断
+                type: ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)],
+
+                // 控制 v-show 的显示状态
+                a: true
+            };
+        }
+    };
+
+    // 创建 Vue 应用并挂载到 #app
+    const app = Vue.createApp(vm);
+    app.mount("#app");
+</script>
+</body>
+</html>
+
+
