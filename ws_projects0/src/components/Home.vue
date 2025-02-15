@@ -83,7 +83,40 @@
           <button class="task-options-btn" @click.stop="openTaskPanel(task)">...</button>
         </div>
       </div>
+      <!-- 任务编辑小面板（悬浮居中） -->
+      <div v-if="selectedTaskForEdit" class="modal-overlay">
+        <div class="task-panel">
+          <!-- 右上角取消按钮 -->
+          <button class="close-btn" @click="closeTaskPanel">✖</button>
 
+          <h2>Edit Task</h2>
+
+          <label>Task Name:</label>
+          <input v-model="selectedTaskForEdit.name" />
+
+          <!-- Importance & Urgency 并排 -->
+          <div class="importance-urgency">
+            <div class="importance">
+              <label>Importance:</label>
+              <input type="number" v-model="selectedTaskForEdit.importance" min="0" max="10" step="1" @input="validateInput('importance', selectedTaskForEdit)" />
+            </div>
+            <div class="urgency">
+              <label>Urgency:</label>
+              <input type="number" v-model="selectedTaskForEdit.urgency" min="0" max="10" step="1" @input="validateInput('urgency', selectedTaskForEdit)" />
+            </div>
+          </div>
+
+          <label>Description:</label>
+          <textarea v-model="selectedTaskForEdit.description"></textarea>
+
+          <p>Reward Points: <strong>{{ calculateReward(selectedTaskForEdit) }}</strong></p>
+
+          <!-- Save 按钮 -->
+          <div class="task-panel-actions">
+            <button class="save-btn" @click="saveTaskChanges">Save</button>
+          </div>
+        </div>
+      </div>
       <button @click="startTask" :disabled="!selectedTask">Start Task</button>
     </div>
 
@@ -243,24 +276,11 @@ const createTask = () => {
 /** -----------------------------
  *  中间
  *  ----------------------------- */
-
 // 选择任务
-// const selectTask = (task) => {
-//       selectedTask.value = task;
-//     };
-
 const selectTask = (task) => {
-  console.log("Before selection:", selectedTask.value); // 调试用
   selectedTask.value = selectedTask.value?.id === task.id ? null : { ...task };
-  console.log("After selection:", selectedTask.value); // 调试用
 };
 
-// 开始任务
-// const startTask = () => {
-//   if (selectedTask.value) {
-//     console.log("Starting task:", selectedTask.value.name);
-//   }
-// };
 
 // 开始任务并移动到完成列表
 const startTask = () => {
