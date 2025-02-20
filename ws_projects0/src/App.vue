@@ -3,14 +3,15 @@
     <!-- Navigation Bar (only shows on Home page) -->
     <nav v-if="showNavbar" class="navbar">
       <div class="nav-left">
-        <router-link to="/home" class="nav-link">Task Management</router-link>
-        <router-link to="/virtual-store" class="nav-link">Virtual Store</router-link>
-        <router-link to="/focus-timer" class="nav-link">Focus Timer</router-link>
-        <router-link to="/calendar" class="nav-link">Calendar</router-link>
-        <router-link to="/data-dashboard" class="nav-link">Data Dashboard</router-link>
+        <router-link to="/home" class="nav-link">📝 Task Management</router-link>
+        <router-link to="/virtual-store" class="nav-link">🏡 Virtual Scene</router-link>
+<!--        <router-link to="/focus-timer" class="nav-link">⏳Focus Timer</router-link>-->
+        <router-link to="/calendar" class="nav-link">📅 Calendar</router-link>
+        <router-link to="/data-dashboard" class="nav-link">📊 Data Dashboard</router-link>
       </div>
       <!-- User Info Section -->
       <div class="nav-right">
+        <span class="user-coins">💰 {{ userCoins }}</span>
         <div class="user-profile" @click="toggleDropdown">
           <img :src="userAvatar" alt="User Avatar" class="avatar" />
         </div>
@@ -32,8 +33,11 @@
 </template>
 
 <script setup>
-import {computed, ref} from 'vue';
+import {computed, onMounted, provide, ref} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { userTaskStore } from "./store/store.js";
+import axios from "axios";
+import {storeToRefs} from "pinia";
 
 const route = useRoute();
 const router = useRouter();
@@ -45,6 +49,12 @@ const showNavbar = computed(() => route.path !== '/' && route.path !== '/signup'
 const userId = ref(localStorage.getItem("userId"));
 const userName = ref(localStorage.getItem("userName"));
 const userAvatar = ref("https://api.iconify.design/heroicons:user-circle.svg"); // 默认头像
+// const userCoins = ref(0);
+// provide("userCoins", userCoins);
+const taskStore = userTaskStore();
+const { userCoins } = storeToRefs(taskStore);
+
+
 
 // 下拉菜单控制
 const showDropdown = ref(false);
@@ -54,11 +64,27 @@ const toggleDropdown = () => {
 
 // Logout Function
 const logout = () => {
-  // localStorage.removeItem('token');
   localStorage.removeItem("userId");
   localStorage.removeItem("userName");
   router.push('/');
 };
+
+// **获取用户积分**
+const fetchUserCoins = async () => {
+  if (!userId.value) return; // **如果 userId 为空，避免请求**
+
+  try {
+    const response = await axios.get("http://localhost:8080/user/coins", {
+      params: { userId: userId.value }
+    });
+    userCoins.value = response.data; // **确保正确存储数据**
+  } catch (err) {
+    console.error("Failed to fetch user coins:", err);
+  }
+};
+
+// **页面加载时获取用户积分**
+onMounted(fetchUserCoins);
 </script>
 
 <style scoped>
@@ -114,6 +140,14 @@ const logout = () => {
   align-items: center;
   cursor: pointer;
 }
+
+.user-coins {
+  font-size: 30px;
+  font-weight: bold;
+  color: #FFB300;
+  margin-right: 50px;
+}
+
 
 .avatar {
   width: 50px;

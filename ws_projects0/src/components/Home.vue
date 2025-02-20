@@ -1,9 +1,9 @@
 <template>
   <div class="task-management-container">
-    <!-- 左侧：创建任务（融合版本2的 Tag 选择/编辑） -->
+    <!-- 左侧：创建任务 -->
     <div class="task-create">
       <h1>Create Task</h1>
-      <input v-model="newTask.name" placeholder="Task Name" />
+      <input v-model="newTask.taskName" placeholder="Task Name" />
 
       <!-- Importance & Urgency  -->
       <div class="importance-urgency">
@@ -20,9 +20,9 @@
       <!-- Tag 选择 & 面板 -->
       <label>Tags:</label>
       <div class="tag-selector">
-        <!-- 1) 根据是否有 newTask.tag 显示不同的文字 -->
+        <!-- 1) 根据是否有 newTask.taskTag 显示不同的文字 -->
         <button @click="toggleTagPanel" class="tag-btn">
-          {{ newTask.tag ? newTask.tag : "Add a tag..." }}
+          {{ newTask.taskTag ? newTask.taskTag : "Add a tag..." }}
           <span v-if="showTagPanel">▲</span>
           <span v-else>▼</span>
         </button>
@@ -30,14 +30,10 @@
         <!-- 2) 面板展开 -->
         <div v-if="showTagPanel" class="tag-panel">
           <div class="tag-grid">
-            <div
-                v-for="tag in tags"
-                :key="tag"
-                class="tag-item"
-                @click="selectTag(tag)">
-            <span :class="{ selected: newTask.tag === tag }">{{ tag }}</span>
+            <div v-for="tag in tags" :key="tag" class="tag-item" @click="selectTag(tag)">
+            <span :class="{ selected: newTask.taskTag === tag }">{{ tag }}</span>
             <!-- 阻止“⚙”冒泡，以免触发 selectTag -->
-            <button class="edit-tag" @click.stop="toggleTagOptions(tag)">⚙</button>
+            <button class="edit-tag" @click.stop="toggleTagOptions(tag)">⚙️</button>
 
             <div v-if="tagOptions === tag" class="tag-options">
               <button @click="renameTag(tag)">Rename</button>
@@ -47,16 +43,12 @@
         </div>
 
         <!-- 新建 Tag 的输入框也放在面板里 -->
-        <input
-            v-model="newTag"
-            placeholder="+ Create new tag"
-            @keyup.enter="addTag"
-        />
+        <input v-model="newTag" placeholder="+ Enter new tag" @keyup.enter="addTag"/>
       </div>
     </div>
 
       <textarea v-model="newTask.description" placeholder="Description"></textarea>
-      <button @click="createTask">Create Task</button>
+      <button @click="createTask">➕ Create Task</button>
     </div>
 
     <!-- 中间 -->
@@ -70,15 +62,14 @@
 
       <!-- 任务列表 -->
       <div class="task-list-container">
-        <div
-            v-for="task in filteredTasks"
-            :key="task.id"
+        <div v-for="task in filteredTasks"
+            :key="task.taskId"
             class="task-item"
-            :class="{ 'selected-task': selectedTask && selectedTask.id === task.id }"
+            :class="{ 'selected-task': selectedTask && selectedTask.taskId === task.taskId }"
             @click="selectTask(task)"
         >
           <!-- 选择任务 -->
-          <span>{{ task.name }} </span>
+          <span>{{ task.taskName }} </span>
           <!-- `...` 按钮 -->
           <button class="task-options-btn" @click.stop="openTaskPanel(task)">...</button>
         </div>
@@ -90,9 +81,8 @@
           <button class="close-btn" @click="closeTaskPanel">✖</button>
 
           <h2>Edit Task</h2>
-
           <label>Task Name:</label>
-          <input v-model="selectedTaskForEdit.name" />
+          <input v-model="selectedTaskForEdit.taskName" />
 
           <!-- Importance & Urgency 并排 -->
           <div class="importance-urgency">
@@ -112,21 +102,41 @@
           <p>Reward Points: <strong>{{ calculateReward(selectedTaskForEdit) }}</strong></p>
 
           <!-- Save 按钮 -->
+<!--          <div class="task-panel-actions">-->
+<!--            <button class="save-btn" @click="saveTaskChanges">Save</button>-->
+<!--          </div>-->
+          <!-- Save & Delete 按钮 -->
           <div class="task-panel-actions">
-            <button class="save-btn" @click="saveTaskChanges">Save</button>
+            <button class="delete-btn" @click="deleteTask(selectedTaskForEdit)">🗑️ Delete Task</button>
+            <button class="save-btn" @click="saveTaskChanges">💾 Save Task</button>
           </div>
         </div>
       </div>
-      <button @click="startTask" :disabled="!selectedTask">Start Task</button>
+
+      <button @click="completeTask" :disabled="!selectedTask">✅ Complete Task</button>
+      <button @click="openTimerPanel" :disabled="!selectedTask">⏳ Start Focus Timer</button>
+
+      <!-- 番茄钟设定面板 -->
+      <div v-if="showTimerPanel" class="modal-overlay">
+        <div class="task-panel">
+          <button class="close-btn" @click="closeTimerPanel">✖</button>
+          <h2>Set Focus Timer</h2>
+          <label>Duration: {{ timerSettings.duration }} minutes</label>
+          <!-- 滑动条 -->
+          <input type="range" v-model="timerSettings.duration" min="0.1" max="180.1" step="1"/>
+          <!-- Start 按钮 -->
+          <button class="save-btn" @click="startFocusTimer">Start</button>
+        </div>
+      </div>
     </div>
 
     <!-- 右侧：已完成任务列表 -->
     <div class="task-list">
       <h1>Completed Tasks</h1>
       <ul>
-        <li v-for="task in completedTasks" :key="task.id">
+        <li v-for="task in completedTasks" :key="task.taskId">
           <input type="checkbox" checked disabled />
-          {{ task.name }}
+          {{ task.taskName }}
         </li>
       </ul>
     </div>
@@ -137,20 +147,42 @@
 
 <script setup>
 
-import { ref, computed } from "vue";
+import {ref, computed, onMounted, inject, provide} from "vue";
+import router from "../router/index.js";
+import axios from "axios";
 
 // 标签（Tag）
-const tags = ref(["Work", "Personal", "Health", "Finance"]);
+const tags = ref(["Default", "Study", "Work", "Health", "Finance"]);
+console.log("Initial tags:", tags.value);
 // 任务列表
 const tasks = ref([]);
+
+// 组件加载时，获取任务数据
+const loadTasks = async () => {
+  try {
+    const response = await axios.get(`http://localhost:8080/task/users/${userId.value}`);
+    tasks.value = response.data || []; // 确保 tasks.value 始终是数组
+    console.log("Tasks loaded:", tasks.value);
+  } catch (error) {
+    console.error("Failed to load tasks:", error);
+    tasks.value = []; // 避免 tasks 变成 undefined
+  }
+};
+
+onMounted(() => {
+  loadTasks(); // 组件挂载后调用
+});
+
+
 // 已完成任务列表
-const completedTasks = ref([]);
+// const completedTasks = ref([]);
+
 // 新建任务输入
 const newTask = ref({
-  name: "",
+  taskName: "",
   importance: 0,
   urgency: 0,
-  tag: "Work", // 默认选中 Work
+  taskTag: "Default", // 默认选中
   description: "",
 });
 
@@ -159,15 +191,27 @@ const newTag = ref("");
 
 // 用于控制 Tag 选择面板和编辑弹窗
 const showTagPanel = ref(false);
+
 const tagOptions = ref(null); // 表示当前正在显示 “Edit/Delete” 选项的 Tag
 
 // 选择的 Tag（用于筛选任务）
-const selectedTag = ref("Work");
+const selectedTag = ref("Default");
 
 // 当前选中的任务
-const selectedTask = ref(null);
+// const selectedTask = ref(null);
 
 const selectedTaskForEdit = ref(null);
+
+const userId = ref(localStorage.getItem("userId"));
+
+import { userTaskStore } from "../store/store.js";
+import {storeToRefs} from "pinia";
+
+
+const taskStore = userTaskStore();
+const { userCoins } = storeToRefs(taskStore);
+const { selectedTask } = storeToRefs(taskStore);
+const { completedTasks } = storeToRefs(taskStore);
 
 /** -----------------------------
  *  左边
@@ -183,18 +227,21 @@ const validateInput = (field) => {
 
 // 筛选出当前选中 Tag 下的任务列表
 const filteredTasks = computed(() => {
-  return tasks.value.filter((task) => task.tag === selectedTag.value);
+  return tasks.value.filter((task) => task.taskTag === selectedTag.value);
 });
+
 
 // 切换 Tag 面板显示/隐藏
 const toggleTagPanel = () => {
+  console.log("Current tags:", tags.value);
+  console.log("Current newTask.taskTag:", newTask.value.taskTag);
   showTagPanel.value = !showTagPanel.value;
   tagOptions.value = null; // 关闭二级编辑选项
 };
 
 // 选择 Tag
 const selectTag = (tag) => {
-  newTask.value.tag = tag
+  newTask.value.taskTag = tag
   // 选完就关闭面板
   showTagPanel.value = false
 }
@@ -212,64 +259,113 @@ const addTag = () => {
   }
 };
 
+
 // 重命名 Tag
-const renameTag = (oldTag) => {
+const renameTag = async (oldTag) => {
   const newName = prompt(`Rename tag "${oldTag}":`, oldTag);
   if (!newName || newName === oldTag || tags.value.includes(newName)) return;
 
-  // 更新 tags 数组
-  tags.value = tags.value.map((tag) => (tag === oldTag ? newName : tag));
+  try {
+    // 调用后端 API
+    const response = await axios.put("http://localhost:8080/task/tag/rename", null, {
+      params: {
+        oldTag: oldTag,
+        newTag: newName,
+        userId: userId.value,  // 确保传入 userId
+      },
+    });
 
-  // 同时更新任务中对应的 tag
-  tasks.value.forEach((task) => {
-    if (task.tag === oldTag) {
-      task.tag = newName;
-    }
-  });
-  // 若选择中的 Tag 也被重命名了，则一并更新
-  if (selectedTag.value === oldTag) {
-    selectedTag.value = newName;
-  }
-  tagOptions.value = null;
-};
+    console.log("Rename tag response:", response.data);
 
-// 删除 Tag（同时删除该 Tag 下的所有任务）
-const removeTag = (tag) => {
-  if (
-      confirm(
-          `Are you sure you want to delete the tag "${tag}"? All tasks under this tag will be removed.`
-      )
-  ) {
-    tags.value = tags.value.filter((t) => t !== tag);
-    tasks.value = tasks.value.filter((task) => task.tag !== tag);
-    if (selectedTag.value === tag) {
-      // 若删除的刚好是当前选中的 Tag，则切换到第一个标签或空
-      selectedTag.value = tags.value[0] || "";
+    // 1. **前端更新 `tags`**
+    tags.value = tags.value.map((tag) => (tag === oldTag ? newName : tag));
+
+    // 2. **如果当前 `newTask.taskTag` 是旧的 tag，更新**
+    if (newTask.value.taskTag === oldTag) {
+      newTask.value.taskTag = newName;
     }
+
+    // 3. **如果 `selectedTag` 是旧的 tag，也更新**
+    if (selectedTag.value === oldTag) {
+      selectedTag.value = newName;
+    }
+
     tagOptions.value = null;
+  } catch (err) {
+    console.error("Failed to rename tag:", err);
+    alert("Rename failed, please check the console.");
   }
 };
 
-// 创建任务
-const createTask = () => {
-  if (!newTask.value.name) return alert("Task Name is required!");
 
-  const task = {
-    id: Date.now(),
-    name: newTask.value.name,
+const removeTag = async (taskTag) => {
+  if (!confirm(`Are you sure you want to delete the tag "${taskTag}"? All tasks under this tag will be removed.`)) {
+    return;
+  }
+
+  try {
+    const response = await axios.delete("http://localhost:8080/task/tag/delete", {
+      params: { taskTag: taskTag, userId: userId.value }
+    });
+
+    console.log("Delete tag response:", response.data);
+
+    // 1️. **前端同步删除 tags 中的对应项**
+    tags.value = tags.value.filter(tag => tag !== taskTag);
+
+    // 2️. **如果删除的 tag 是当前选中的，切换到第一个 tag**
+    if (newTask.value.taskTag === taskTag) {
+      newTask.value.taskTag = tags.value.length > 0 ? tags.value[0] : "";
+    }
+
+    if (selectedTag.value === taskTag) {
+      selectedTag.value = tags.value.length > 0 ? tags.value[0] : "";
+    }
+
+    tagOptions.value = null;  // 关闭弹出菜单
+  } catch (err) {
+    console.error("Failed to delete tag:", err);
+    alert("Failed to delete the tag, please check the console.");
+  }
+};
+
+
+const createTask = async () => {
+  if (!newTask.value.taskName) {
+    alert("Task Name is required!");
+    return;
+  }
+
+  const payload = {
+    taskName: newTask.value.taskName,
     importance: newTask.value.importance,
     urgency: newTask.value.urgency,
-    tag: newTask.value.tag,
+    taskTag: newTask.value.taskTag,
     description: newTask.value.description,
+    rewardCoins: calculateReward(newTask.value),
+    userId: userId.value
   };
-  tasks.value.push(task);
 
-  // 重置输入
-  newTask.value.name = "";
-  newTask.value.importance = 0;
-  newTask.value.urgency = 0;
-  newTask.value.tag = "Work";
-  newTask.value.description = "";
+  try {
+    await axios.post("http://localhost:8080/task", payload);
+    console.log("Task created successfully");
+
+    // **任务创建后重新加载任务列表**
+    await loadTasks();
+
+    // 清空输入框
+    newTask.value = {
+      taskName: "",
+      importance: 0,
+      urgency: 0,
+      taskTag: "Default",
+      description: ""
+    };
+
+  } catch (error) {
+    console.error("Failed to create task:", error);
+    alert("Failed to create a task. Please check the console");
+  }
 };
 
 
@@ -278,25 +374,41 @@ const createTask = () => {
  *  ----------------------------- */
 // 选择任务
 const selectTask = (task) => {
-  selectedTask.value = selectedTask.value?.id === task.id ? null : { ...task };
+  selectedTask.value = selectedTask.value?.taskId === task.taskId ? null : { ...task };
 };
-
 
 // 开始任务并移动到完成列表
-const startTask = () => {
+// const completeTask = () => {
+//   if (!selectedTask.value) return;
+//
+//   completedTasks.value.push(selectedTask.value);
+//   selectedTask.value = null;
+// };
+
+const completeTask = async () => {
   if (!selectedTask.value) return;
 
-  completedTasks.value.push(selectedTask.value);
-  tasks.value = tasks.value.filter(
-      (task) => task.id !== selectedTask.value.id
-  );
-  selectedTask.value = null;
+  try {
+    // **发送后端请求更新积分**
+    await axios.post("http://localhost:8080/user/updateCoins", {
+      userId: userId.value,
+      rewardCoins: Number(selectedTask.value.rewardCoins)
+    });
+
+    // **前端手动更新 userCoins**
+    // userCoins.value += selectedTask.value.rewardCoins;
+    userCoins.value = Number((userCoins.value + selectedTask.value.rewardCoins).toFixed(2));
+
+
+    completedTasks.value.push(selectedTask.value);
+    selectedTask.value = null;
+  } catch (err) {
+    console.error("Failed to update coins:", err);
+  }
 };
 
-
-// 计算奖励点数
 const calculateReward = (task) => {
-  return (0.6 * task.importance + 0.4 * task.urgency + 5).toFixed(2);
+  return parseFloat((0.6 * task.importance + 0.4 * task.urgency + 5).toFixed(2));
 };
 
 // 打开任务编辑面板
@@ -310,14 +422,90 @@ const closeTaskPanel = () => {
 };
 
 // 保存修改的任务
-const saveTaskChanges = () => {
-  if (selectedTaskForEdit.value) {
-    const index = tasks.value.findIndex((t) => t.id === selectedTaskForEdit.value.id);
+const saveTaskChanges = async () => {
+  if (!selectedTaskForEdit.value) return;
+
+  try {
+    // 先构造一个 payload，字段名要跟后端的 Task 实体对应：
+    const payload = {
+      taskId: selectedTaskForEdit.value.taskId,
+      taskName: selectedTaskForEdit.value.taskName,
+      importance: selectedTaskForEdit.value.importance,
+      urgency: selectedTaskForEdit.value.urgency,
+      description: selectedTaskForEdit.value.description,
+      rewardCoins: calculateReward(selectedTaskForEdit.value),
+      userId: userId.value,
+    };
+
+    // 调用后端的 PUT 接口
+    const response = await fetch("http://localhost:8080/task/update", {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const msg = await response.text();
+      alert('Update failed: ' + msg);
+      return;
+    }
+
+    // 如果成功，就更新本地 tasks 数组以刷新 UI
+    const index = tasks.value.findIndex(
+        (t) => t.taskId === selectedTaskForEdit.value.taskId
+    );
     if (index !== -1) {
       tasks.value[index] = { ...selectedTaskForEdit.value };
     }
+
+    alert('Task updated successfully!');
+  } catch (error) {
+    console.error(error);
+    alert('Error updating task');
+  } finally {
     closeTaskPanel();
   }
+};
+
+
+const deleteTask = async (task) => {
+  if (!confirm(`Are you sure you want to delete task "${task.taskName}"?`)) return;
+
+  try {
+    await axios.delete(`http://localhost:8080/task/delete`, {
+      params: { taskId: task.taskId }
+    });
+
+    // 从任务列表中删除
+    tasks.value = tasks.value.filter(t => t.taskId !== task.taskId);
+    selectedTaskForEdit.value = null;
+    alert("Task deleted successfully!");
+  } catch (err) {
+    console.error("Failed to delete task:", err);
+    alert("Error deleting task. Please try again.");
+  }
+};
+
+// 番茄钟设定状态
+const showTimerPanel = ref(false);
+const timerSettings = ref({ duration: 30 });
+
+// 打开番茄钟设定面板
+const openTimerPanel = () => {
+  showTimerPanel.value = true;
+};
+
+// 关闭番茄钟设定面板
+const closeTimerPanel = () => {
+  showTimerPanel.value = false;
+};
+
+const startFocusTimer = () => {
+  closeTimerPanel();
+  router.push({
+    path: "/focus-timer",
+    query: { duration: timerSettings.value.duration }
+  });
 };
 
 </script>
@@ -386,8 +574,8 @@ const saveTaskChanges = () => {
   position: absolute;
   background: white;
   border: 1px solid #ddd;
-  padding: 10px;
-  width: 100%;
+  padding: 20px;
+  width: 90%;
   max-height: 200px;
   overflow-y: auto;
   display: flex;
@@ -399,7 +587,7 @@ const saveTaskChanges = () => {
 .tag-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 25px;
 }
 
 .tag-item {
@@ -426,14 +614,14 @@ const saveTaskChanges = () => {
   border: none;
   color: white;
   cursor: pointer;
-  margin-left: 5px;
+  margin-left: 10px;
 }
 
 /* Tag 编辑/删除 选项 */
 .tag-options {
   position: absolute;
   top: 30px;
-  left: 0;
+  left: 20px;
   background: white;
   border: 1px solid #ddd;
   display: flex;
@@ -527,7 +715,6 @@ const saveTaskChanges = () => {
 }
 
 /* 右上角 X 关闭按钮 */
-/* X 关闭按钮美化 */
 .close-btn {
   position: absolute;
   top: 10px;
@@ -552,6 +739,26 @@ const saveTaskChanges = () => {
   color: #000;
 }
 
+.task-panel-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 20px;
+}
+
+.delete-btn {
+  background-color: #ECEFF1;
+  color: #333;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #CFD8DC;
+  color: #000;
+}
 
 
 
@@ -586,19 +793,41 @@ const saveTaskChanges = () => {
   height: 16px;
 }
 
+/* 优化滑动条
+input[type="range"] {
+  width: 100%;
+  margin: 10px 0;
+  appearance: none;
+  height: 5px;
+  background: #ddd;
+  border-radius: 5px;
+  outline: none;
+  transition: background 0.3s;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+
+input[type="number"] {
+  width: 60px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+  margin-top: 5px;
+}
+*/
 
 /* -----------------------------
    通用
    ----------------------------- */
-/* 分割线 */
-.divider {
-  border: none;
-  height: 1px;
-  background: #ddd;
-  margin: 10px 0;
-}
-
-
 input,
 button,
 select {

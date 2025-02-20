@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <h1>virtual store(function is developing...)</h1>
+    <h1>virtual scene(function is developing...)</h1>
   </div>
 </template>
 
