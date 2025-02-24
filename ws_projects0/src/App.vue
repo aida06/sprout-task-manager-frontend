@@ -4,7 +4,7 @@
     <nav v-if="showNavbar" class="navbar">
       <div class="nav-left">
         <router-link to="/home" class="nav-link">📝 Task Management</router-link>
-        <router-link to="/virtual-store" class="nav-link">🏡 Virtual Scene</router-link>
+        <router-link to="/virtual-scene" class="nav-link">🏡 Virtual Scene</router-link>
 <!--        <router-link to="/focus-timer" class="nav-link">⏳Focus Timer</router-link>-->
         <router-link to="/calendar" class="nav-link">📅 Calendar</router-link>
         <router-link to="/data-dashboard" class="nav-link">📊 Data Dashboard</router-link>

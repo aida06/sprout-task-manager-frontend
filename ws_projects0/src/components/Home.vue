@@ -399,7 +399,6 @@ const completeTask = async () => {
     // userCoins.value += selectedTask.value.rewardCoins;
     userCoins.value = Number((userCoins.value + selectedTask.value.rewardCoins).toFixed(2));
 
-
     completedTasks.value.push(selectedTask.value);
     selectedTask.value = null;
   } catch (err) {
@@ -516,7 +515,7 @@ const startFocusTimer = () => {
    ----------------------------- */
 .task-management-container {
   width: 99%;
-  height: 99%;
+  height: 95%;
   display: flex;
   justify-content: space-around;
   gap: 20px;
