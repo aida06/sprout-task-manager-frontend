@@ -49,11 +49,9 @@ const showNavbar = computed(() => route.path !== '/' && route.path !== '/signup'
 const userId = ref(localStorage.getItem("userId"));
 const userName = ref(localStorage.getItem("userName"));
 const userAvatar = ref("https://api.iconify.design/heroicons:user-circle.svg"); // 默认头像
-// const userCoins = ref(0);
-// provide("userCoins", userCoins);
+
 const taskStore = userTaskStore();
 const { userCoins } = storeToRefs(taskStore);
-
 
 
 // 下拉菜单控制
@@ -85,6 +83,9 @@ const fetchUserCoins = async () => {
 
 // **页面加载时获取用户积分**
 onMounted(fetchUserCoins);
+// onMounted(async () => {
+//   await fetchUserCoins();
+// });
 </script>
 
 <style scoped>

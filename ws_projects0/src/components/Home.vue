@@ -142,7 +142,6 @@
     </div>
   </div>
 
-
 </template>
 
 <script setup>
@@ -150,6 +149,17 @@
 import {ref, computed, onMounted, inject, provide} from "vue";
 import router from "../router/index.js";
 import axios from "axios";
+
+import { userTaskStore } from "../store/store.js";
+import {storeToRefs} from "pinia";
+
+const userId = ref(localStorage.getItem("userId"));
+
+const taskStore = userTaskStore();
+const { userCoins } = storeToRefs(taskStore);
+const { selectedTask } = storeToRefs(taskStore);
+const { completedTasks } = storeToRefs(taskStore);
+
 
 // 标签（Tag）
 const tags = ref(["Default", "Study", "Work", "Health", "Finance"]);
@@ -174,9 +184,6 @@ onMounted(() => {
 });
 
 
-// 已完成任务列表
-// const completedTasks = ref([]);
-
 // 新建任务输入
 const newTask = ref({
   taskName: "",
@@ -197,21 +204,9 @@ const tagOptions = ref(null); // 表示当前正在显示 “Edit/Delete” 选�
 // 选择的 Tag（用于筛选任务）
 const selectedTag = ref("Default");
 
-// 当前选中的任务
-// const selectedTask = ref(null);
 
 const selectedTaskForEdit = ref(null);
 
-const userId = ref(localStorage.getItem("userId"));
-
-import { userTaskStore } from "../store/store.js";
-import {storeToRefs} from "pinia";
-
-
-const taskStore = userTaskStore();
-const { userCoins } = storeToRefs(taskStore);
-const { selectedTask } = storeToRefs(taskStore);
-const { completedTasks } = storeToRefs(taskStore);
 
 /** -----------------------------
  *  左边
@@ -259,7 +254,6 @@ const addTag = () => {
   }
 };
 
-
 // 重命名 Tag
 const renameTag = async (oldTag) => {
   const newName = prompt(`Rename tag "${oldTag}":`, oldTag);
@@ -297,7 +291,6 @@ const renameTag = async (oldTag) => {
   }
 };
 
-
 const removeTag = async (taskTag) => {
   if (!confirm(`Are you sure you want to delete the tag "${taskTag}"? All tasks under this tag will be removed.`)) {
     return;
@@ -328,7 +321,6 @@ const removeTag = async (taskTag) => {
     alert("Failed to delete the tag, please check the console.");
   }
 };
-
 
 const createTask = async () => {
   if (!newTask.value.taskName) {

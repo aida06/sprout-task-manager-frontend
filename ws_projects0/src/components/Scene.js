@@ -1,17 +1,28 @@
 import Phaser from 'phaser';
+import SceneController from './SceneController.js';
+
 
 export default class Scene extends Phaser.Scene {
-    constructor() {
+    constructor({userId, userCoins}) {
         super({ key: 'SceneKey' });
+
+        // 这里保存“ref 对象”，不要取 .value
+        this.userIdRef = userId
+        this.userCoinsRef = userCoins
 
         this.storeItems = [];    // 从后端获取的物品数据
         this.typeButtons = [];   // 标签按钮数组
         this.itemElements = [];  // 存放当前显示的物品相关对象（背景、文字、sprite等）
 
-        this.ghostSprite = null;   // 当前残影
-        this.placingItem = null;   // 当前要放置的物品数据
-        this.isPlacing = false;  // 是否正在放置模式
+        this.spriteMap = {};
+        this.frameIndexMap = {};
 
+        this.belongings = []
+
+        console.log("Scene.js initialized with userCoins:", this.userCoinsRef.value);
+
+        // 创建一个控制器，并把自己传进去
+        this.sceneController = new SceneController(this);
     }
 
     preload() {
@@ -19,8 +30,14 @@ export default class Scene extends Phaser.Scene {
         this.load.image('water_tileset', '/src/assets/tilesets/Water.png');
         this.load.image('grass_tileset', '/src/assets/tilesets/Grass_tiles_v2.png');
 
+        this.load.image('houseWall_tileset', '/src/assets/tilesets/Wooden_House_Walls_Tilset.png');
+        this.load.image('houseDoor_tileset', '/src/assets/tilesets/door animation sprites.png');
+        this.load.image('furniture_tileset', '/src/assets/tilesets/Basic_Furniture.png');
+
+        this.load.image('houseRoof_tileset', '/src/assets/tilesets/Wooden_House_Roof_Tilset.png');
+
         // 加载 Tiled JSON 地图
-        this.load.tilemapTiledJSON('backgroundMap', '/src/assets/maps/background1.tmj');
+        this.load.tilemapTiledJSON('backgroundMap', '/src/assets/maps/background2.tmj');
 
         // 加载UI
         this.load.spritesheet('buttons', '/src/assets/UI/SquareButtons26x19.png', {
@@ -34,34 +51,301 @@ export default class Scene extends Phaser.Scene {
         });
 
         // 加载Sprite
+        this.load.spritesheet('boat', '/src/assets/sprites/Boats.png', {
+            frameWidth: 48,
+            frameHeight: 32
+        });
+
+        // 加载StoreItem
+        this.load.spritesheet('trees', '/src/assets/sprites/Trees.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('bushes', '/src/assets/sprites/Bushes.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('giant tree', '/src/assets/sprites/Giant Tree.png', {
+            frameWidth: 44,
+            frameHeight: 48
+        });
+
+        this.load.spritesheet('small stump', '/src/assets/sprites/Small Stump.png', {
+            frameWidth: 10,
+            frameHeight: 10
+        });
+
+        this.load.spritesheet('sprout stump', '/src/assets/sprites/Sprout Stump.png', {
+            frameWidth: 26,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('short log', '/src/assets/sprites/Short Log.png', {
+            frameWidth: 16,
+            frameHeight: 10
+        });
+
+        this.load.spritesheet('sprout log', '/src/assets/sprites/Sprout Log.png', {
+            frameWidth: 23,
+            frameHeight: 14
+        });
+
+        this.load.spritesheet('farming plants1', '/src/assets/sprites/Farming Plants1.png', {
+            frameWidth: 16,
+            frameHeight: 29
+        });
+
+        this.load.spritesheet('farming plants2', '/src/assets/sprites/Farming Plants2.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('mushrooms', '/src/assets/sprites/Mushrooms.png', {
+            frameWidth: 16,
+            frameHeight: 15
+        });
+
+        this.load.spritesheet('flowers', '/src/assets/sprites/Flowers.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('sunflower', '/src/assets/sprites/Flowers.png', {
+            frameWidth: 16,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('weeds', '/src/assets/sprites/Weeds.png', {
+            frameWidth: 16,
+            frameHeight: 13
+        });
+
+        //Animal
         this.load.spritesheet('cow', '/src/assets/sprites/Free Cow Sprites.png', {
             frameWidth: 32,  // 每帧宽度
             frameHeight: 32  // 每帧高度
         });
 
+        this.load.spritesheet('pink cow', '/src/assets/sprites/Pink cow animation sprites.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('brown cow', '/src/assets/sprites/Brown cow animations.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('green cow', '/src/assets/sprites/Green cow animation sprites.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('purple cow', '/src/assets/sprites/Purple cow animation sprites.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('cow baby', '/src/assets/sprites/baby light cow animations sprites.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('pink cow baby', '/src/assets/sprites/baby pink cow animations sprites.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('brown cow baby', '/src/assets/sprites/baby brown cow animations sprites.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('green cow baby', '/src/assets/sprites/baby green cow animations sprites.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('purple cow baby', '/src/assets/sprites/baby purple cow animations sprites.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
         this.load.spritesheet('chicken', '/src/assets/sprites/Free Chicken Sprites.png', {
-            frameWidth: 16,  // 每帧宽度
-            frameHeight: 16  // 每帧高度
+            frameWidth: 16,
+            frameHeight: 16
         });
 
-        this.load.spritesheet('waterWell', '/src/assets/sprites/Water well.png', {
-            frameWidth: 32,  // 每帧宽度
-            frameHeight: 32  // 每帧高度
+        this.load.spritesheet('red chicken', '/src/assets/sprites/chicken red.png', {
+            frameWidth: 16,
+            frameHeight: 16
         });
 
+        this.load.spritesheet('brown chicken', '/src/assets/sprites/chicken brown.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('green chicken', '/src/assets/sprites/chicken green.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('blue chicken', '/src/assets/sprites/chicken blue.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('chick', '/src/assets/sprites/Chicken_Baby.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('red chick', '/src/assets/sprites/Chicken_Baby_Red.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('brown chick', '/src/assets/sprites/Chicken_Baby_Brown.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('green chick', '/src/assets/sprites/Chicken_Baby_Green.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('blue chick', '/src/assets/sprites/Chicken_Baby_Blue.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+
+        // Decoration
+        this.load.spritesheet('path', '/src/assets/sprites/Paths.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('stone path', '/src/assets/sprites/Stone_Path.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('fenceA', '/src/assets/sprites/FenceA.png', {
+            frameWidth: 40,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('fenceB', '/src/assets/sprites/FenceB.png', {
+            frameWidth: 8,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('fence gates', '/src/assets/sprites/Fence gates animation sprites.png', {
+            frameWidth: 64,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('stones1', '/src/assets/sprites/Stones1.png', {
+            frameWidth: 16,
+            frameHeight: 14
+        });
+
+        this.load.spritesheet('stones2', '/src/assets/sprites/Stones2.png', {
+            frameWidth: 27,
+            frameHeight: 22
+        });
+
+        this.load.spritesheet('stones3', '/src/assets/sprites/Stones3.png', {
+            frameWidth: 32,
+            frameHeight: 35
+        });
+
+        this.load.spritesheet('water tray', '/src/assets/sprites/Water tray.png', {
+            frameWidth: 32,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('barn1', '/src/assets/sprites/Barn structures.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('barn2', '/src/assets/sprites/Barn structures.png', {
+            frameWidth: 30,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('water well', '/src/assets/sprites/Water well.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('small chicken houses', '/src/assets/sprites/Small_Chicken_Houses.png', {
+            frameWidth: 32,
+            frameHeight: 48
+        });
+
+        this.load.spritesheet('medium chicken houses', '/src/assets/sprites/Medium_Chicken_Houses.png', {
+            frameWidth: 48,
+            frameHeight: 48
+        });
+
+        this.load.spritesheet('large chicken houses', '/src/assets/sprites/Large_Chicken_Houses.png', {
+            frameWidth: 64,
+            frameHeight: 76
+        });
+
+        this.load.spritesheet('chest', '/src/assets/sprites/Chest.png', {
+            frameWidth: 48,
+            frameHeight: 48
+        });
+
+        this.load.spritesheet('basket', '/src/assets/sprites/Piknik basket.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('blanket', '/src/assets/sprites/Piknik blanket.png', {
+            frameWidth: 48,
+            frameHeight: 48
+        });
+
+        this.load.spritesheet('mailbox', '/src/assets/sprites/Mailbox.png', {
+            frameWidth: 10,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('plain sign', '/src/assets/sprites/signs_sides.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        this.load.spritesheet('sign', '/src/assets/sprites/signs.png', {
+            frameWidth: 16,
+            frameHeight: 16
+        });
+
+        
     }
 
 
     create() {
+
         this.createMap();
         this.createSprite();
-        //this.createAnimation();
-        // this.createStore();
-
         this.createStoreUI();
 
-        // 异步获取后端数据，然后根据数据生成商店UI
+        // 异步获取后端数据:顺序很重要
         this.loadStoreData();
+        this.loadItemSpriteMap();
+        this.loadFrameIndexMap();
+        this.loadUserBelongings(); // 加载用户物品
+
 
         // 全局监听 pointermove: 让 ghostSprite 跟随鼠标
         this.input.on('pointermove', (pointer) => {
@@ -74,82 +358,172 @@ export default class Scene extends Phaser.Scene {
             }
         });
 
-        // // 全局监听 pointerdown: 左键放置 / 右键取消
-        // this.input.on('pointerdown', (pointer) => {
-        //     // 若没有在“放置模式”，直接 return
-        //     if (!this.isPlacing) return;
-        //
-        //     if (pointer.button === 2) {  // 右键 ⇒ 取消
-        //         console.log('Cancel placing item');
-        //         this.cancelPlacingItem();
-        //         return;
-        //     }
-        //
-        //     if (pointer.button === 0) {  // 左键 ⇒ 放置
-        //         console.log('Placing item at:', pointer.x, pointer.y);
-        //         this.placeItem(pointer.x, pointer.y, this.placingItem);
-        //     }
-        // });
-
-
         this.input.mouse.disableContextMenu();  // 禁用右键菜单
 
     }
 
+
     createMap() {
         // 读取 Tiled JSON 地图
-        const map = this.make.tilemap({ key: 'backgroundMap' });
+        this.map = this.make.tilemap({ key: 'backgroundMap' });
 
         // 绑定 Tileset（名称要和 `tmj` 里的 Tileset 名称一致）
-        const waterTileset = map.addTilesetImage('Water', 'water_tileset');
-        const grassTileset = map.addTilesetImage('GrassV2', 'grass_tileset');
+        const waterTileset = this.map.addTilesetImage('Water', 'water_tileset');
+        const grassTileset = this.map.addTilesetImage('GrassV2', 'grass_tileset');
+
+        const houseWallTileset = this.map.addTilesetImage('HouseWall', 'houseWall_tileset');
+        const houseDoorTileset = this.map.addTilesetImage('HouseDoor', 'houseDoor_tileset');
+        const furnitureTileset = this.map.addTilesetImage('Furniture', 'furniture_tileset');
+
+        const houseRoofTileset = this.map.addTilesetImage('HouseRoof', 'houseRoof_tileset'); // 暂时没用
+
+        // 如果 houseFloor 里用了多个 Tileset（例如 HouseWall 和 HouseRoof），传入数组
+        const houseTilesets = [houseWallTileset, houseDoorTileset, furnitureTileset]; // 多个 Tileset
 
         // 创建图层（名称要和 `tmj` 里的一致）
-        const waterLayer = map.createLayer('water1', waterTileset, 0, 0);
-        const grassLayer = map.createLayer('grass1', grassTileset, 0, 0);
+        this.waterLayer = this.map.createLayer('water1', waterTileset, 0, 0);
+        this.grassLayer = this.map.createLayer('grass1', grassTileset, 0, -15);
 
-        // **放大缩放**
-        waterLayer.setScale(3);
-        grassLayer.setScale(3);
+        this.houseFloorLayer = this.map.createLayer('houseFloor', houseWallTileset, -340, -55); // Floor 只有一个
+        this.houseLayer = this.map.createLayer('house', houseTilesets, -340, -55);
+        this.furnitureLayer = this.map.createLayer('furniture', furnitureTileset, -340, -55);
+
+        // 放大
+        this.waterLayer.setScale(3.1);
+        this.grassLayer.setScale(3);
+
+        this.houseFloorLayer.setScale(2.5);
+        this.houseLayer.setScale(2.5);
+        this.furnitureLayer.setScale(2.5);
     }
 
-    createAnimation() {
+
+
+    createSprite() {
+        // this.anims.create({
+        //     key: 'walk',   // 动画名称
+        //     frames: this.anims.generateFrameNumbers('cow', { start: 0, end: 4 }), // 从第0帧到第4帧
+        //     frameRate: 10, // 播放速度（每秒10帧）
+        //     repeat: -1     // 无限循环
+        // });
+        //
+        // this.cow = this.add.sprite(1000, 200, 'cow').setScale(2);
+        // this.cow.play('walk'); // 让小牛播放动画
+
+        // this.waterWell = this.add.sprite(1000, 300, 'waterWell').setScale(2);
+        //
+        // this.cow = this.add.sprite(1000, 400, 'chicken').setScale(2);
+
+
         this.anims.create({
-            key: 'walk',   // 动画名称
-            frames: this.anims.generateFrameNumbers('cow', { start: 0, end: 4 }), // 从第0帧到第4帧
-            frameRate: 10, // 播放速度（每秒10帧）
+            key: 'float',   // 动画名称
+            frames: this.anims.generateFrameNumbers('boat', { start: 0, end: 1 }), // 从第0帧到第4帧
+            frameRate: 2, // 播放速度（每秒10帧）
             repeat: -1     // 无限循环
+        });
+        this.boat = this.add.sprite(1380, 655, 'boat').setScale(3);
+        this.boat.play('float');
+
+        // this.tree = this.add.sprite(800, 400, 'trees').setFrame(0).setScale(2);
+        //
+        this.bush = this.add.sprite(800, 450, 'small chicken houses').setFrame(4).setScale(2);
+    }
+
+    // 接收 belongings 数据，并在 Phaser 场景中渲染
+    // loadBelongingsIntoScene(belongings) {
+    //     belongings.forEach(item => {
+    //         let spriteKey = this.spriteMap[item.itemId] || 'cow';
+    //         // 创建 Phaser Sprite
+    //         let sprite = this.add.sprite(item.locationX, item.locationY, spriteKey)
+    //             .setScale(2)
+    //             .setInteractive({ cursor: 'pointer' })
+    //             .on('pointerdown', () => {
+    //                 console.log('DB item clicked:', sprite);
+    //                 this.sceneController.showItemOptions(sprite);
+    //             });
+    //         // 关键点：把“数据库记录的ID”存到 sprite 上
+    //         // 假设后端返回字段是 item.belongingId 或 item.id
+    //         sprite.belongingsId = item.belongingsId;
+    //         // 如果还需要“物品类型ID”，也可以赋值
+    //         sprite.itemId = item.itemId;
+    //
+    //     });
+    // }
+
+    loadBelongingsIntoScene(belongings) {
+        belongings.forEach(item => {
+            let spriteKey = this.spriteMap[item.itemId] || 'cow';
+            let frameIndex = this.frameIndexMap[item.itemId] || 0; // 取数据库中的帧编号，默认 0
+
+            // 创建 Phaser Sprite，并设置正确的帧
+            let sprite = this.add.sprite(item.locationX, item.locationY, spriteKey)
+                .setFrame(frameIndex)
+                .setScale(2)
+                .setInteractive({ cursor: 'pointer' })
+                .on('pointerdown', () => {
+                    console.log('DB item clicked:', sprite);
+                    this.sceneController.showItemOptions(sprite);
+                });
+
+            // 关键点：把“数据库记录的ID”存到 sprite 上
+            sprite.belongingsId = item.belongingsId; // 物品唯一ID
+            sprite.itemId = item.itemId; // 物品类型ID
+            sprite.frameIndex = item.frameIndex;
         });
     }
 
-    createSprite() {
-        this.cow = this.add.sprite(200, 200, 'cow').setScale(2); // 位置 (200,200)
-        // this.cow.play('walk'); // 让小牛播放动画
 
-        // this.cow.setInteractive({ draggable: true });
-        // this.input.setDraggable(this.cow);
-        //
-        // this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-        //     gameObject.x = dragX;
-        //     gameObject.y = dragY;
-        // });
+    async loadItemSpriteMap() {
+        try {
+            const response = await fetch("http://localhost:8080/storeItems/itemSpriteMap");
+            const itemSpriteMap = await response.json();
+            console.log("Item Sprite Map:", itemSpriteMap);
 
-        this.waterWell = this.add.sprite(200, 300, 'waterWell').setScale(2); // 位置 (200,200)
+            this.spriteMap = Object.fromEntries(
+                Object.entries(itemSpriteMap).map(([key, value]) => [Number(key), value])
+            );
+        } catch (error) {
+            console.error("Failed to fetch item sprite map:", error);
+        }
+    }
 
-        this.cow = this.add.sprite(300, 200, 'chicken').setScale(2); // 位置 (200,200)
+    async loadFrameIndexMap() {
+        try {
+            const response = await fetch("http://localhost:8080/storeItems/frameIndexMap");
+            const frameIndexMap = await response.json();
+            console.log("Frame Index Map:", frameIndexMap);
 
+            this.frameIndexMap = Object.fromEntries(
+                Object.entries(frameIndexMap).map(([key, value]) => [Number(key), value])
+            );
+        } catch (error) {
+            console.error("Failed to fetch frame index map:", error);
+        }
     }
 
 
 
-    /**
-     * 1. 创建商店面板和“Store”按钮
-     */
+    async loadUserBelongings() {
+        try {
+            // const userId = localStorage.getItem("userId");
+            const response = await fetch(`http://localhost:8080/userBelongings/users/${this.userIdRef.value}`);
+            this.belongings = await response.json() || [];
+            console.log("User belongings loaded:", this.belongings);
+            // 传给 Phaser 场景渲染
+            this.loadBelongingsIntoScene(this.belongings);
+        } catch (error) {
+            console.error("Failed to load user belongings:", error);
+            this.belongings = [];
+        }
+    }
+
+
+    // 1. 创建商店面板和“Store”按钮
     createStoreUI() {
         // 创建 Store 按钮
         this.storeButton = this.add.image(1420, 20, 'buttons', 4)
-            .setScale(3, 2)
-            .setInteractive()
+            .setScale(3, 3)
+            .setInteractive({ cursor: 'pointer' })
             .on('pointerdown', () => this.toggleStorePanel())
             .on('pointerover', () => {
             this.storeButton.setTint(0xFFECB3);  // 浅棕色
@@ -163,14 +537,12 @@ export default class Scene extends Phaser.Scene {
             .setOrigin(0.5);
 
         // 创建 Store 面板（默认隐藏）
-        this.storePanel = this.add.image(1350, 155, 'panel', 1)
-            .setScale(3.5, 2)
+        this.storePanel = this.add.image(1380, 317, 'panel', 1)
+            .setScale(3.75, 4.52)
             .setVisible(false);
     }
 
-    /**
-     * 2. 切换商店面板的可见性
-     */
+    // 2. 切换商店面板的可见性
     toggleStorePanel() {
         const isVisible = !this.storePanel.visible;
         this.storePanel.setVisible(isVisible);
@@ -193,9 +565,7 @@ export default class Scene extends Phaser.Scene {
     }
 
 
-    /**
-     * 3. 从后端获取商店物品数据
-     */
+    // 3. 从后端获取商店物品数据
     async loadStoreData() {
         try {
             const response = await fetch("http://localhost:8080/storeItems");
@@ -204,24 +574,23 @@ export default class Scene extends Phaser.Scene {
             // 构建标签（Tab）按钮
             this.createTypeTabs();
         } catch (error) {
-            console.error('加载商店数据失败:', error);
+            console.error('Failed to load store data:', error);
         }
     }
 
-    /**
-     * 4. 动态生成「物品类型」Tab 按钮，比如“Animal”、“Plant”、“Building”等
-     */
+
+    // 4. 动态生成「物品类型」Tab 按钮，比如“Animal”、“Plant”、“Building”等
     createTypeTabs() {
         const uniqueTypes = [...new Set(this.storeItems.map(item => item.itemType))];
 
-        let startX = 1235;
-        let startY = 70;
-        let gapX = 110;
+        let startX = 1262;
+        let startY = 85;
+        let gapX = 113;
 
         uniqueTypes.forEach((type, index) => {
             let tabBg = this.add.rectangle(startX + index * gapX, startY, 100, 30, 0xFFFDE7)
                 .setStrokeStyle(1, 0x8D6E63)
-                .setInteractive()
+                .setInteractive({ cursor: 'pointer' })
                 .on('pointerdown', () => {
                     this.activateTab(type);
                 })
@@ -255,7 +624,6 @@ export default class Scene extends Phaser.Scene {
         }
     }
 
-
     activateTab(selectedType) {
         // 遍历所有 Tab，更新选中状态
         this.typeButtons.forEach(tab => {
@@ -267,167 +635,255 @@ export default class Scene extends Phaser.Scene {
                 tab.text.setColor('#795548').setFontStyle('normal');
             }
         });
-
         // 更新显示的物品
         this.showItemsByType(selectedType);
     }
 
 
-    /**
-     * 5. 根据选中的物品类型，在商店面板里排布对应的物品
-     */
+    // 5. 根据选中的物品类型，在商店面板里排布对应的物品
+    // showItemsByType(selectedType) {
+    //     this.clearItemElements();
+    //     if (!this.storePanel.visible) return;
+    //
+    //     const filteredItems = this.storeItems.filter(i => i.itemType === selectedType);
+    //
+    //     let startX = 1250;
+    //     let startY = 155;
+    //     let gapX = 110;
+    //     let gapY = 110;
+    //     let colCount = 3;
+    //
+    //     filteredItems.forEach((item, idx) => {
+    //         let col = idx % colCount;
+    //         let row = Math.floor(idx / colCount);
+    //         let x = startX + col * gapX;
+    //         let y = startY + row * gapY;
+    //
+    //         // **创建一个 Container 统一管理所有元素**
+    //         let itemContainer = this.add.container(x, y);
+    //         this.itemElements.push(itemContainer);
+    //
+    //         // **1) 方形背景**
+    //         let bgRect = this.add.rectangle(0, 0, 85, 85, 0xFFFDE7)
+    //             .setOrigin(0.5)
+    //             .setStrokeStyle(1, 0x8D6E63);
+    //
+    //         // **2) 物品名称**
+    //         let nameText = this.add.text(0, 53, item.itemName, {
+    //             fontSize: '15px',
+    //             fill: '#6D4C41',
+    //             fontFamily: '"Comic Sans MS", cursive',
+    //             align: 'center'
+    //         }).setOrigin(0.5);
+    //
+    //         // **3) 物品 Sprite**
+    //         let sprite = this.add.sprite(0, -7, item.itemSprite)
+    //             .setFrame(item.frameIndex)
+    //             .setScale(1.6);
+    //
+    //         // **4) 物品价格**
+    //         let priceText = this.add.text(0, 30, `💰${item.itemPrize}`, {
+    //             fontSize: '15px',
+    //             fill: '#6D4C41',
+    //             fontFamily: '"Comic Sans MS", cursive',
+    //             align: 'center'
+    //         }).setOrigin(0.5);
+    //
+    //         // **将所有元素加入 Container**
+    //         itemContainer.add([bgRect, nameText, sprite, priceText]);
+    //
+    //         // **让整个物品框可交互**
+    //         itemContainer.setSize(80, 80);
+    //         itemContainer.setInteractive({ cursor: 'pointer' })
+    //             .on('pointerdown', () => this.sceneController.startPlacingItem(item))
+    //             .on('pointerover', () => bgRect.setFillStyle(0xFFF59D)) // 高亮
+    //             .on('pointerout', () => bgRect.setFillStyle(0xFFFDE7));  // 还原
+    //
+    //         this.itemElements.push(itemContainer);
+    //     });
+    // }
+
+
     showItemsByType(selectedType) {
+        // 0) 清理之前的元素
         this.clearItemElements();
         if (!this.storePanel.visible) return;
 
         const filteredItems = this.storeItems.filter(i => i.itemType === selectedType);
 
-        let startX = 1235;
-        let startY = 135;
-        let gapX = 100;
-        let gapY = 80;
-        let colCount = 2;
+        // 1) 一些布局相关的常量
+        let startX = 1258;      // 物品列表左上角X
+        let startY = 160;       // 物品列表左上角Y
+        let gapX = 115;         // 水平间距
+        let gapY = 118;         // 垂直间距
+        let colCount = 3;       // 每行列数
 
+        let viewHeight = 469;   // 可视区域（mask）高度
+        let viewWidth = colCount * gapX + 10; // 可视区域宽度（和列数 & 间距相关）
+
+        // 2) 计算内容高度 & 创建容器
+        let contentHeight = Math.ceil(filteredItems.length / colCount) * gapY;
+        // 避免出现 contentHeight = 0
+        if (contentHeight < 1) contentHeight = 1;
+
+        this.itemContainer = this.add.container(startX, startY);
+        this.itemElements.push(this.itemContainer);
+
+        // 3) 创建 mask 并将其隐藏，用来限制可视范围
+        let maskGraphics = this.add.graphics();
+        maskGraphics.fillStyle(0xffffff, 1);
+        // 在这里，你可以适当微调 mask 的位置和大小
+        maskGraphics.fillRect(startX - 60, startY - 45, viewWidth, viewHeight);
+        maskGraphics.setVisible(false);
+        let mask = maskGraphics.createGeometryMask();
+        this.itemContainer.setMask(mask);
+
+        // 4) 创建实际的物品 Box
         filteredItems.forEach((item, idx) => {
             let col = idx % colCount;
             let row = Math.floor(idx / colCount);
-            let x = startX + col * gapX;
-            let y = startY + row * gapY;
+            let x = col * gapX;
+            let y = row * gapY;
 
-            // **创建一个 Container 统一管理所有元素**
-            let itemContainer = this.add.container(x, y);
-            this.itemElements.push(itemContainer);
+            // 单个物品容器
+            let itemBox = this.add.container(x, y);
 
-            // **1) 方形背景**
-            let bgRect = this.add.rectangle(0, 0, 80, 80, 0xFFFDE7)
+            // 背景
+            let bgRect = this.add.rectangle(0, 0, 90, 90, 0xFFFDE7)
                 .setOrigin(0.5)
                 .setStrokeStyle(1, 0x8D6E63);
 
-            // **2) 物品名称**
-            let nameText = this.add.text(0, 53, item.itemName, {
+            // 物品名称
+            let nameText = this.add.text(0, 57, item.itemName, {
                 fontSize: '15px',
                 fill: '#6D4C41',
                 fontFamily: '"Comic Sans MS", cursive',
                 align: 'center'
             }).setOrigin(0.5);
 
-            // **3) 物品 Sprite**
-            let sprite = this.add.sprite(0, -8, item.itemSprite).setScale(1.5);
+            // 物品精灵
+            let sprite = this.add.sprite(0, -5, item.itemSprite)
+                .setFrame(item.frameIndex)
+                .setScale(1.7);
 
-            // **4) 物品价格**
-            let priceText = this.add.text(0, 28, `💰${item.itemPrize}`, {
+            // 价格文本
+            let priceText = this.add.text(0, 33, `💰${item.itemPrize}`, {
                 fontSize: '15px',
                 fill: '#6D4C41',
                 fontFamily: '"Comic Sans MS", cursive',
                 align: 'center'
             }).setOrigin(0.5);
 
-            // **将所有元素加入 Container**
-            itemContainer.add([bgRect, nameText, sprite, priceText]);
+            // 加入子容器
+            itemBox.add([bgRect, nameText, sprite, priceText]);
 
-            // **让整个物品框可交互**
-            itemContainer.setSize(80, 80);
-            itemContainer.setInteractive()
-                .on('pointerdown', () => this.startPlacingItem(item))
-                .on('pointerover', () => bgRect.setFillStyle(0xFFF59D)) // 高亮
-                .on('pointerout', () => bgRect.setFillStyle(0xFFFDE7));  // 还原
+            // 交互
+            itemBox.setSize(80, 80);
+            itemBox.setInteractive({ cursor: 'pointer' })
+                .on('pointerdown', () => this.sceneController.startPlacingItem(item))
+                .on('pointerover', () => bgRect.setFillStyle(0xFFF59D))
+                .on('pointerout',  () => bgRect.setFillStyle(0xFFFDE7));
 
-            this.itemElements.push(itemContainer);
+            // 将物品容器添加到大的 itemContainer
+            this.itemContainer.add(itemBox);
+        });
+
+        // 5) 计算最大滚动距离
+        this.scrollY = 0;
+        let maxScroll = Math.max(0, contentHeight - viewHeight);
+
+        // 6) 创建滚动条
+        //  先定义滚动条位置、大小
+        let scrollbarX = startX + viewWidth - 58; // X位置可以微调
+        let scrollbarY = startY - 50;            // Y位置可再微调
+        let scrollbarWidth = 10;
+        let scrollbarHeight = viewHeight;
+
+        //  创建滚动条本体（背景）
+        let scrollbar = this.add.rectangle(scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, 0xFFF8E1)
+            .setOrigin(0, 0)
+            .setDepth(999);
+        this.itemElements.push(scrollbar);
+        //  创建滑块
+        //  如果内容小于等于一屏，则不需要滚动——可隐藏或固定滑块
+        if (contentHeight <= viewHeight) {
+            // 隐藏滚动条或让其不可拖动
+            scrollbar.setVisible(false);
+        }
+
+        // 计算滑块高度
+        let ratio = viewHeight / contentHeight;
+        // 如果 ratio >= 1，说明内容不满一页，可直接让滑块和滚动条同高或隐藏
+        let thumbHeight = ratio >= 1 ? scrollbarHeight : ratio * scrollbarHeight;
+
+        let scrollThumb = this.add.rectangle(scrollbarX, scrollbarY, scrollbarWidth, thumbHeight, 0x8D6E63)
+            .setOrigin(0, 0)
+            .setDepth(1000)
+            .setInteractive({ cursor: 'pointer' });
+        this.itemElements.push(scrollThumb);
+
+        if (ratio >= 1) {
+            // 若内容不够一页，也将滑块隐藏或设为不可移动
+            scrollThumb.setVisible(false);
+        }
+
+        // 7) 监听滚轮事件，实现滚动 & 同步滑块
+        console.log("maxScroll:", maxScroll, "contentHeight:", contentHeight, "viewHeight:", viewHeight);
+        // 重新注册新的滚轮监听
+        // this.input.removeListener('wheel');
+        //
+        // this.input.on('wheel', (pointer, deltaX, deltaY) => {
+        //     if (maxScroll <= 0) return;
+        //
+        //     let prevScrollY = this.scrollY;
+        //     // 调大滚动系数 2.0 或 2.5
+        //     this.scrollY = Phaser.Math.Clamp(this.scrollY + deltaY * 2.0, -maxScroll, 0);
+        //
+        //     // **直接赋值（无动画）**
+        //     this.itemContainer.y = startY + this.scrollY;
+        //
+        //     if (this.scrollY !== prevScrollY) {
+        //         let scrollRatio = Math.abs(this.scrollY) / maxScroll;
+        //         let newThumbY = scrollbarY + scrollRatio * (scrollbarHeight - thumbHeight);
+        //         scrollThumb.y = newThumbY;
+        //     }
+        //
+        //     console.log("scrollY:", this.scrollY, "itemContainer Y:", this.itemContainer.y, "scrollThumb Y:", scrollThumb.y);
+        // });
+
+
+        // 8) 拖动滑块
+        this.input.setDraggable(scrollThumb);
+        scrollThumb.on('drag', (pointer, dragX, dragY) => {
+            if (maxScroll <= 0) return; // 不需要滚动
+
+            // 限制滑块只能在滚动条范围内移动
+            let newY = Phaser.Math.Clamp(
+                dragY,
+                scrollbarY,
+                scrollbarY + scrollbarHeight - thumbHeight
+            );
+            scrollThumb.y = newY;
+
+            // 计算滚动比例
+            let scrollRatio = (newY - scrollbarY) / (scrollbarHeight - thumbHeight);
+            // 将比例映射到 itemContainer
+            this.scrollY = -scrollRatio * maxScroll;
+            this.itemContainer.y = startY + this.scrollY;
         });
     }
 
 
 
-    // 点击商店中的某个物品，进入放置模式
-    startPlacingItem(item) {
-        if (this.isPlacing) return;
-
-        console.log('Starting placing mode for:', item.itemSprite);
-
-        this.placingItem = item;
-        this.isPlacing = true;
-
-        // **创建残影 sprite**
-        this.ghostSprite = this.add.sprite(this.input.x, this.input.y, item.itemSprite)
-            .setAlpha(0.5)
-            .setScale(2);
-
-        console.log('ghostSprite created at:', this.ghostSprite.x, this.ghostSprite.y);
-
-        // **添加键盘提示文本**
-        this.ghostText = this.add.text(this.ghostSprite.x, this.ghostSprite.y + 40, ' Press Q: place  W: cancel', {
-            fontFamily:'"Comic Sans MS", cursive',
-            fontSize: '15px',
-            fill: '#37474F',
-            align: 'center',
-            padding: { x: 6, y: 2 }
-        }).setOrigin(0.5);
-
-        // **让提示文本也跟随鼠标**
-        this.input.on('pointermove', (pointer) => {
-            if (this.ghostSprite) {
-                this.ghostSprite.x = pointer.x;
-                this.ghostSprite.y = pointer.y;
-                this.ghostText.x = pointer.x;
-                this.ghostText.y = pointer.y + 40;
-            }
-        });
-
-        // **绑定键盘监听**
-        this.input.keyboard.on('keydown-Q', this.confirmPlacement, this);
-        this.input.keyboard.on('keydown-W', this.cancelPlacingItem, this);
-    }
-
-
-// **按 Q 确认放置**
-    confirmPlacement() {
-        if (!this.isPlacing) return;
-
-        console.log('Placing item at:', this.ghostSprite.x, this.ghostSprite.y);
-        this.placeItem(this.ghostSprite.x, this.ghostSprite.y);
-    }
-
-// **确认放置**
-    placeItem(x, y) {
-        if (!this.placingItem) return;
-
-        console.log('Attempting to place:', this.placingItem.itemName, 'at', x, y);
-
-        this.add.sprite(x, y, this.placingItem.itemSprite).setScale(2);
-        console.log('Item placed at:', x, y);
-
-        this.cancelPlacingItem();
-    }
-
-// **按 W 取消放置**
-    cancelPlacingItem() {
-        if (this.ghostSprite) {
-            this.ghostSprite.destroy();
-            this.ghostSprite = null;
-        }
-        if (this.ghostText) {
-            this.ghostText.destroy();
-            this.ghostText = null;
-        }
-
-        this.placingItem = null;
-        this.isPlacing = false;
-
-        // **移除键盘监听**
-        this.input.keyboard.off('keydown-Q', this.confirmPlacement, this);
-        this.input.keyboard.off('keydown-W', this.cancelPlacingItem, this);
-    }
-
-
-
-
-    /**
-     * 6. 清除上一次显示的物品网格（避免重复堆叠）
-     */
+    // 6. 清除上一次显示的物品网格（避免重复堆叠）
     clearItemElements() {
         this.itemElements.forEach(elem => elem.destroy());  // 删除所有物品元素
         this.itemElements = [];
+
+        // 可选：移除滚轮监听，防止多次注册
+        this.input.removeListener('wheel');
     }
+
 
 
 }
