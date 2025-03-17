@@ -2,12 +2,20 @@ import { createApp } from 'vue';
 import { createPinia } from "pinia";
 import App from './App.vue';
 import router from './router';
-// import './style.css';
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
 
 const app = createApp(App);
-app.use(createPinia());  // 先注册 Pinia
-app.use(router);         // 再注册 Router
-app.mount("#app");       // 最后挂载 Vue 实例
+
+app.use(createPinia());
+app.use(router);
+
+// 关键一步：注册 Element Plus
+app.use(ElementPlus);
+
+// 最后挂载
+app.mount("#app");
+
 
 
 

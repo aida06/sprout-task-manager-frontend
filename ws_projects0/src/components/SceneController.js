@@ -35,15 +35,16 @@ export default class SceneController {
             .setFrame(item.frameIndex)
             .setAlpha(0.5)
             .setScale(2)
+            .setDepth(2)
             .setInteractive({ cursor: 'pointer' });
 
         this.ghostText = this.scene.add.text(this.ghostSprite.x, this.ghostSprite.y + 40, 'Press Q: place  W: cancel', {
             fontFamily: '"Comic Sans MS", cursive',
-            fontSize: '15px',
-            fill: '#37474F',
+            fontSize: '16px',
+            fill: '#6D4C41',
             align: 'center',
             padding: { x: 6, y: 2 }
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(2);
 
         this.scene.input.on('pointermove', (pointer) => {
             if (this.ghostSprite) {
@@ -106,11 +107,11 @@ export default class SceneController {
         let newItem = this.scene.add.sprite(x, y, this.placingItem.itemSprite).setScale(2);
         newItem.setInteractive({ cursor: 'pointer' })
             .on('pointerdown', () => {
-                console.log('Item clicked:', newItem);
+                console.log('New Item clicked:', newItem);
                 this.showItemOptions(newItem);
             });
 
-        console.log('Item placed at:', x, y);
+        console.log('New Item placed at:', x, y);
 
         try {
             const response = await fetch('http://localhost:8080/userBelongings/add', {
@@ -173,37 +174,106 @@ export default class SceneController {
             this.currentItem = null;
             return;
         }
+        // this.loadItemPrizeMap();
+        // 计算返还金币
+        const price = this.itemPrizeMap[newItem.itemId]; // 从本地 Map 取值
+        if (price === undefined) {
+            console.error(`Item ${newItem.itemId} price not found in map`);
+            return;
+        }
+        const refundCoins = Number((price / 2).toFixed(2));
 
         this.clearItemOptions();
         this.currentItem = newItem;
 
         let bounds = newItem.getBounds();
         let optionX = bounds.centerX;
+        let optionY2 = bounds.bottom + 10;
+        // 在图标上方再留一点空间显示悬浮提示
         let optionY = bounds.top - 10;
 
+        // Move 按钮
         this.moveButton = this.scene.add.rectangle(optionX - 25, optionY, 45, 30, 0xA5D6A7)
             .setStrokeStyle(1, 0xFFFFFF)
             .setInteractive({ cursor: 'pointer' })
-            .on('pointerdown', () => this.startMovingItem(newItem));
+            // .on('pointerdown', () => this.startMovingItem(newItem))
+            // 悬浮时显示提示文字
+            .on('pointerover', () => {
+                    this.movetip = this.scene.add.text(
+                        optionX,            // 与按钮对齐或稍作调整
+                        optionY2,
+                        `Move me to a better location ? `,
+                        {
+                            fontFamily: '"Comic Sans MS", cursive',
+                            fontSize: '16px',
+                            align: 'center',
+                            color: '#6D4C41'
+                        }
+                    ).setOrigin(0.5);
+                })
+            // 移出时销毁提示文字
+            .on('pointerout', () => {
+                if (this.movetip) {
+                    this.movetip.destroy();
+                    this.movetip = null;
+                }
+            })
+            .on('pointerdown', () => {
+                this.startMovingItem(newItem);
+                if (this.movetip) {
+                    this.movetip.destroy();
+                    this.movetip = null;
+                }
+            })
 
         this.moveText = this.scene.add.text(optionX - 25, optionY, 'Move', {
             fontFamily: '"Comic Sans MS", cursive',
-            fontSize: '14px',
+            fontSize: '15px',
             align: 'center'
         }).setOrigin(0.5);
 
+        // Sale 按钮
         this.saleButton = this.scene.add.rectangle(optionX + 25, optionY, 45, 30, 0xEF9A9A)
             .setStrokeStyle(1, 0xFFFFFF)
             .setInteractive({ cursor: 'pointer' })
-            .on('pointerdown', () => this.deleteItem(newItem));
-        console.log('Raw item data from backend:', this.currentItem);
-        console.log("Item Prize:", this.currentItem.itemPrize);
+            // .on('pointerdown', () => this.deleteItem(newItem))
+            // 悬浮时显示提示文字
+            .on('pointerover', () => {
+                this.refundTooltip = this.scene.add.text(
+                    optionX,            // 与按钮对齐或稍作调整
+                    optionY2,
+                    `Sell me for half the price:💰${refundCoins} ? `,
+                    {
+                        fontFamily: '"Comic Sans MS", cursive',
+                        fontSize: '16px',
+                        align: 'center',
+                        color: '#6D4C41'
+                    }
+                ).setOrigin(0.5);
+            })
+            // 移出时销毁提示文字
+            .on('pointerout', () => {
+                if (this.refundTooltip) {
+                    this.refundTooltip.destroy();
+                    this.refundTooltip = null;
+                }
+            })
+            .on('pointerdown', () => {
+                this.deleteItem(newItem);
+                if (this.refundTooltip) {
+                    this.refundTooltip.destroy();
+                    this.refundTooltip = null;
+                }
+            })
 
-        this.saleText = this.scene.add.text(optionX + 25, optionY, 'Sale', {
+        this.saleText = this.scene.add.text(optionX + 25, optionY, 'Sell', {
             fontFamily: '"Comic Sans MS", cursive',
-            fontSize: '14px',
+            fontSize: '15px',
             align: 'center'
         }).setOrigin(0.5);
+
+        console.log('Raw item data from backend:', this.currentItem);
+        console.log("Item Prize:", this.currentItem.itemPrize);
     }
 
 
@@ -352,15 +422,20 @@ export default class SceneController {
         this.saleText = null;
     }
 
+
     startMovingItem(sprite) {
         this.clearItemOptions();
         if (this.isMoving) return;
 
         console.log('Start moving existing item, belongingId=', sprite.belongingsId);
+        console.log('Start moving existing item, itemId=', sprite.itemId);
         this.isMoving = true;
         this.movingSprite = sprite;
+
+        let frameIndex = this.scene.frameIndexMap[sprite.itemId] || 0;
+
         this.ghostSprite = this.scene.add.sprite(sprite.x, sprite.y, sprite.texture.key)
-            .setFrame(sprite.frameIndex)
+            .setFrame(frameIndex)
             .setAlpha(0.5)
             .setScale(2);
 
@@ -368,8 +443,8 @@ export default class SceneController {
 
         this.ghostText = this.scene.add.text(this.ghostSprite.x, this.ghostSprite.y + 40, ' Press Q: place  W: cancel', {
             fontFamily: '"Comic Sans MS", cursive',
-            fontSize: '15px',
-            fill: '#37474F',
+            fontSize: '16px',
+            fill: '#6D4C41',
             align: 'center',
             padding: { x: 6, y: 2 }
         }).setOrigin(0.5);
@@ -393,6 +468,7 @@ export default class SceneController {
         this.scene.input.keyboard.on('keydown-Q', this.confirmMovingItem, this);
         this.scene.input.keyboard.on('keydown-W', this.cancelMovingItem, this);
     }
+
 
     async confirmMovingItem() {
         if (!this.isMoving || !this.ghostSprite) return;
@@ -432,6 +508,7 @@ export default class SceneController {
         this.movingSprite.setVisible(true);
         this.cancelMovingItem();
     }
+
 
     cancelMovingItem() {
         this.isMoving = false;

@@ -113,7 +113,7 @@
         </div>
       </div>
 
-      <button @click="completeTask" :disabled="!selectedTask">✅ Complete Task</button>
+<!--      <button @click="completeTask" :disabled="!selectedTask">✅ Complete Task</button>-->
       <button @click="openTimerPanel" :disabled="!selectedTask">⏳ Start Focus Timer</button>
 
       <!-- 番茄钟设定面板 -->

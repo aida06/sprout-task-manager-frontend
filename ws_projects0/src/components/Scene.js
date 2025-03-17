@@ -36,8 +36,11 @@ export default class Scene extends Phaser.Scene {
 
         this.load.image('houseRoof_tileset', '/src/assets/tilesets/Wooden_House_Roof_Tilset.png');
 
+        this.load.image('plantField_tileset', '/src/assets/tilesets/Tilled_Dirt_Wide_v2.png');
+
+
         // 加载 Tiled JSON 地图
-        this.load.tilemapTiledJSON('backgroundMap', '/src/assets/maps/background2.tmj');
+        this.load.tilemapTiledJSON('backgroundMap', '/src/assets/maps/background3.tmj');
 
         // 加载UI
         this.load.spritesheet('buttons', '/src/assets/UI/SquareButtons26x19.png', {
@@ -55,6 +58,7 @@ export default class Scene extends Phaser.Scene {
             frameWidth: 48,
             frameHeight: 32
         });
+
 
         // 加载StoreItem
         this.load.spritesheet('trees', '/src/assets/sprites/Trees.png', {
@@ -241,8 +245,8 @@ export default class Scene extends Phaser.Scene {
         });
 
         this.load.spritesheet('fenceB', '/src/assets/sprites/FenceB.png', {
-            frameWidth: 8,
-            frameHeight: 32
+            frameWidth: 12,
+            frameHeight: 45
         });
 
         this.load.spritesheet('fence gates', '/src/assets/sprites/Fence gates animation sprites.png', {
@@ -330,22 +334,20 @@ export default class Scene extends Phaser.Scene {
             frameHeight: 16
         });
 
-        
     }
 
 
-    create() {
+    async create() {
 
         this.createMap();
         this.createSprite();
         this.createStoreUI();
 
-        // 异步获取后端数据:顺序很重要
-        this.loadStoreData();
-        this.loadItemSpriteMap();
-        this.loadFrameIndexMap();
-        this.loadUserBelongings(); // 加载用户物品
-
+        // 串行加载
+        await this.loadStoreData();
+        await this.loadItemSpriteMap();
+        await this.loadFrameIndexMap();
+        await this.loadUserBelongings();
 
         // 全局监听 pointermove: 让 ghostSprite 跟随鼠标
         this.input.on('pointermove', (pointer) => {
@@ -377,6 +379,9 @@ export default class Scene extends Phaser.Scene {
 
         const houseRoofTileset = this.map.addTilesetImage('HouseRoof', 'houseRoof_tileset'); // 暂时没用
 
+        const plantFieldTileset = this.map.addTilesetImage('TilledDirtV2', 'plantField_tileset');
+
+
         // 如果 houseFloor 里用了多个 Tileset（例如 HouseWall 和 HouseRoof），传入数组
         const houseTilesets = [houseWallTileset, houseDoorTileset, furnitureTileset]; // 多个 Tileset
 
@@ -384,19 +389,26 @@ export default class Scene extends Phaser.Scene {
         this.waterLayer = this.map.createLayer('water1', waterTileset, 0, 0);
         this.grassLayer = this.map.createLayer('grass1', grassTileset, 0, -15);
 
-        this.houseFloorLayer = this.map.createLayer('houseFloor', houseWallTileset, -340, -55); // Floor 只有一个
-        this.houseLayer = this.map.createLayer('house', houseTilesets, -340, -55);
-        this.furnitureLayer = this.map.createLayer('furniture', furnitureTileset, -340, -55);
+        // 左上角 -340, -55
+        let houseX = 145
+        let houseY = -55
+        let houseScale = (2.5, 2.5)
+        this.houseFloorLayer = this.map.createLayer('houseFloor', houseWallTileset, houseX, houseY); // Floor 只有一个
+        this.houseLayer = this.map.createLayer('house', houseTilesets, houseX, houseY);
+        this.furnitureLayer = this.map.createLayer('furniture', furnitureTileset, houseX, houseY);
+
+        this.plantFieldLayer = this.map.createLayer('plantField', plantFieldTileset, -355, 10);
 
         // 放大
         this.waterLayer.setScale(3.1);
         this.grassLayer.setScale(3);
 
-        this.houseFloorLayer.setScale(2.5);
-        this.houseLayer.setScale(2.5);
-        this.furnitureLayer.setScale(2.5);
-    }
+        this.houseFloorLayer.setScale(houseScale);
+        this.houseLayer.setScale(houseScale);
+        this.furnitureLayer.setScale(houseScale);
 
+        this.plantFieldLayer.setScale(4.5, 2.5);
+    }
 
 
     createSprite() {
@@ -426,7 +438,7 @@ export default class Scene extends Phaser.Scene {
 
         // this.tree = this.add.sprite(800, 400, 'trees').setFrame(0).setScale(2);
         //
-        this.bush = this.add.sprite(800, 450, 'small chicken houses').setFrame(4).setScale(2);
+        // this.bush = this.add.sprite(800, 450, 'small chicken houses').setFrame(4).setScale(2);
     }
 
     // 接收 belongings 数据，并在 Phaser 场景中渲染
@@ -450,11 +462,24 @@ export default class Scene extends Phaser.Scene {
     //     });
     // }
 
+    async loadUserBelongings() {
+        try {
+            // const userId = localStorage.getItem("userId");
+            const response = await fetch(`http://localhost:8080/userBelongings/users/${this.userIdRef.value}`);
+            this.belongings = await response.json() || [];
+            console.log("User belongings loaded:", this.belongings);
+            // 传给 Phaser 场景渲染
+            this.loadBelongingsIntoScene(this.belongings);
+        } catch (error) {
+            console.error("Failed to load user belongings:", error);
+            this.belongings = [];
+        }
+    }
+
     loadBelongingsIntoScene(belongings) {
         belongings.forEach(item => {
             let spriteKey = this.spriteMap[item.itemId] || 'cow';
             let frameIndex = this.frameIndexMap[item.itemId] || 0; // 取数据库中的帧编号，默认 0
-
             // 创建 Phaser Sprite，并设置正确的帧
             let sprite = this.add.sprite(item.locationX, item.locationY, spriteKey)
                 .setFrame(frameIndex)
@@ -471,7 +496,6 @@ export default class Scene extends Phaser.Scene {
             sprite.frameIndex = item.frameIndex;
         });
     }
-
 
     async loadItemSpriteMap() {
         try {
@@ -501,23 +525,6 @@ export default class Scene extends Phaser.Scene {
         }
     }
 
-
-
-    async loadUserBelongings() {
-        try {
-            // const userId = localStorage.getItem("userId");
-            const response = await fetch(`http://localhost:8080/userBelongings/users/${this.userIdRef.value}`);
-            this.belongings = await response.json() || [];
-            console.log("User belongings loaded:", this.belongings);
-            // 传给 Phaser 场景渲染
-            this.loadBelongingsIntoScene(this.belongings);
-        } catch (error) {
-            console.error("Failed to load user belongings:", error);
-            this.belongings = [];
-        }
-    }
-
-
     // 1. 创建商店面板和“Store”按钮
     createStoreUI() {
         // 创建 Store 按钮
@@ -539,7 +546,8 @@ export default class Scene extends Phaser.Scene {
         // 创建 Store 面板（默认隐藏）
         this.storePanel = this.add.image(1380, 317, 'panel', 1)
             .setScale(3.75, 4.52)
-            .setVisible(false);
+            .setVisible(false)
+            .setDepth(1);
     }
 
     // 2. 切换商店面板的可见性
@@ -578,7 +586,6 @@ export default class Scene extends Phaser.Scene {
         }
     }
 
-
     // 4. 动态生成「物品类型」Tab 按钮，比如“Animal”、“Plant”、“Building”等
     createTypeTabs() {
         const uniqueTypes = [...new Set(this.storeItems.map(item => item.itemType))];
@@ -589,8 +596,9 @@ export default class Scene extends Phaser.Scene {
 
         uniqueTypes.forEach((type, index) => {
             let tabBg = this.add.rectangle(startX + index * gapX, startY, 100, 30, 0xFFFDE7)
-                .setStrokeStyle(1, 0x8D6E63)
+                .setStrokeStyle(1.2, 0x8D6E63)
                 .setInteractive({ cursor: 'pointer' })
+                .setDepth(11)
                 .on('pointerdown', () => {
                     this.activateTab(type);
                 })
@@ -613,6 +621,7 @@ export default class Scene extends Phaser.Scene {
                 // fontStyle: 'bold'
             })
                 .setOrigin(0.5)
+                .setDepth(12)
                 .setVisible(false); // 默认隐藏
 
             this.typeButtons.push({ bg: tabBg, text: tabText, type });
@@ -727,6 +736,7 @@ export default class Scene extends Phaser.Scene {
         if (contentHeight < 1) contentHeight = 1;
 
         this.itemContainer = this.add.container(startX, startY);
+        // rect 相对容器本身的(0,0)，大小与显示区域一致
         this.itemElements.push(this.itemContainer);
 
         // 3) 创建 mask 并将其隐藏，用来限制可视范围
@@ -736,7 +746,8 @@ export default class Scene extends Phaser.Scene {
         maskGraphics.fillRect(startX - 60, startY - 45, viewWidth, viewHeight);
         maskGraphics.setVisible(false);
         let mask = maskGraphics.createGeometryMask();
-        this.itemContainer.setMask(mask);
+        this.itemContainer.setMask(mask)
+            .setDepth(2);
 
         // 4) 创建实际的物品 Box
         filteredItems.forEach((item, idx) => {
@@ -751,7 +762,7 @@ export default class Scene extends Phaser.Scene {
             // 背景
             let bgRect = this.add.rectangle(0, 0, 90, 90, 0xFFFDE7)
                 .setOrigin(0.5)
-                .setStrokeStyle(1, 0x8D6E63);
+                .setStrokeStyle(1.2, 0x8D6E63);
 
             // 物品名称
             let nameText = this.add.text(0, 57, item.itemName, {
@@ -778,11 +789,25 @@ export default class Scene extends Phaser.Scene {
             itemBox.add([bgRect, nameText, sprite, priceText]);
 
             // 交互
-            itemBox.setSize(80, 80);
+            itemBox.setSize(90, 90);
             itemBox.setInteractive({ cursor: 'pointer' })
                 .on('pointerdown', () => this.sceneController.startPlacingItem(item))
                 .on('pointerover', () => bgRect.setFillStyle(0xFFF59D))
                 .on('pointerout',  () => bgRect.setFillStyle(0xFFFDE7));
+
+            // **存储原始 Y 位置**
+            // itemBox.originalY = y;
+            // // itemBox.originalY + 469 = y2;
+            //
+            // // **设置交互（初始可见的物品才可交互）**
+            // itemBox.setSize(90, 90);
+            // if (y >= 0) {
+            //     itemBox.setInteractive({ cursor: 'pointer' })
+            //         .on('pointerdown', () => this.sceneController.startPlacingItem(item))
+            //         .on('pointerover', () => bgRect.setFillStyle(0xFFF59D))
+            //         .on('pointerout', () => bgRect.setFillStyle(0xFFFDE7));
+            // }
+
 
             // 将物品容器添加到大的 itemContainer
             this.itemContainer.add(itemBox);
@@ -794,7 +819,7 @@ export default class Scene extends Phaser.Scene {
 
         // 6) 创建滚动条
         //  先定义滚动条位置、大小
-        let scrollbarX = startX + viewWidth - 58; // X位置可以微调
+        let scrollbarX = startX + viewWidth - 57; // X位置可以微调
         let scrollbarY = startY - 50;            // Y位置可再微调
         let scrollbarWidth = 10;
         let scrollbarHeight = viewHeight;
@@ -827,32 +852,32 @@ export default class Scene extends Phaser.Scene {
             scrollThumb.setVisible(false);
         }
 
+
+
         // 7) 监听滚轮事件，实现滚动 & 同步滑块
         console.log("maxScroll:", maxScroll, "contentHeight:", contentHeight, "viewHeight:", viewHeight);
-        // 重新注册新的滚轮监听
-        // this.input.removeListener('wheel');
-        //
-        // this.input.on('wheel', (pointer, deltaX, deltaY) => {
-        //     if (maxScroll <= 0) return;
-        //
-        //     let prevScrollY = this.scrollY;
-        //     // 调大滚动系数 2.0 或 2.5
-        //     this.scrollY = Phaser.Math.Clamp(this.scrollY + deltaY * 2.0, -maxScroll, 0);
-        //
-        //     // **直接赋值（无动画）**
-        //     this.itemContainer.y = startY + this.scrollY;
-        //
-        //     if (this.scrollY !== prevScrollY) {
-        //         let scrollRatio = Math.abs(this.scrollY) / maxScroll;
-        //         let newThumbY = scrollbarY + scrollRatio * (scrollbarHeight - thumbHeight);
-        //         scrollThumb.y = newThumbY;
-        //     }
-        //
-        //     console.log("scrollY:", this.scrollY, "itemContainer Y:", this.itemContainer.y, "scrollThumb Y:", scrollThumb.y);
-        // });
+        // 监听鼠标滚轮事件，让 itemContainer 和 scrollThumb 同步移动
+        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+            let scrollSpeed = 30; // 滚动速度
+            this.itemContainer.y -= (deltaY > 0) ? scrollSpeed : -scrollSpeed;
 
+            // 限制 itemContainer 滚动范围
+            let maxScrollUp = startY;
+            let maxScrollDown = startY - (contentHeight - viewHeight);
+            if (this.itemContainer.y > maxScrollUp) {
+                this.itemContainer.y = maxScrollUp;
+            } else if (this.itemContainer.y < maxScrollDown) {
+                this.itemContainer.y = maxScrollDown;
+            }
 
-        // 8) 拖动滑块
+            // **同步 scrollThumb 滑块的位置**
+            if (maxScroll > 0) {
+                let scrollRatio = (this.itemContainer.y - maxScrollDown) / (maxScrollUp - maxScrollDown);
+                scrollThumb.y = scrollbarY + (1 - scrollRatio) * (scrollbarHeight - thumbHeight);
+            }
+        });
+
+        // // 8) 拖动滑块
         this.input.setDraggable(scrollThumb);
         scrollThumb.on('drag', (pointer, dragX, dragY) => {
             if (maxScroll <= 0) return; // 不需要滚动
@@ -871,7 +896,230 @@ export default class Scene extends Phaser.Scene {
             this.scrollY = -scrollRatio * maxScroll;
             this.itemContainer.y = startY + this.scrollY;
         });
+
+
     }
+
+
+    // showItemsByType(selectedType) {
+    //     // 0) 清理之前的元素
+    //     this.clearItemElements();
+    //     if (!this.storePanel.visible) return;
+    //
+    //     const filteredItems = this.storeItems.filter(i => i.itemType === selectedType);
+    //
+    //     // 1) 一些布局相关的常量
+    //     let startX = 1258;
+    //     let startY = 160;
+    //     let gapX = 115;
+    //     let gapY = 118;
+    //     let colCount = 3;
+    //
+    //     let viewHeight = 469;
+    //     let viewWidth = colCount * gapX + 10;
+    //
+    //     // 2) 计算内容总高度
+    //     let contentHeight = Math.ceil(filteredItems.length / colCount) * gapY;
+    //     if (contentHeight < 1) contentHeight = 1;
+    //
+    //     // 3) 创建容器 & 遮罩
+    //     this.itemContainer = this.add.container(startX, startY);
+    //     this.itemElements.push(this.itemContainer);
+    //
+    //     let maskGraphics = this.add.graphics();
+    //     maskGraphics.fillStyle(0xffffff, 1);
+    //     maskGraphics.fillRect(startX - 60, startY - 45, viewWidth, viewHeight);
+    //     maskGraphics.setVisible(false);
+    //     let mask = maskGraphics.createGeometryMask();
+    //     this.itemContainer.setMask(mask);
+    //
+    //     // **存储所有 itemBox**
+    //     this.itemBoxes = [];
+    //
+    //     // 4) 创建所有物品 Box
+    //     filteredItems.forEach((item, idx) => {
+    //         let col = idx % colCount;
+    //         let row = Math.floor(idx / colCount);
+    //         let x = col * gapX;
+    //         let y = row * gapY;
+    //
+    //         // 单个物品容器
+    //         let itemBox = this.add.container(x, y);
+    //
+    //         // 背景
+    //         let bgRect = this.add.rectangle(0, 0, 90, 90, 0xFFFDE7)
+    //             .setOrigin(0.5)
+    //             .setStrokeStyle(1.2, 0x8D6E63);
+    //
+    //         // 物品名称
+    //         let nameText = this.add.text(0, 57, item.itemName, {
+    //             fontSize: '15px',
+    //             fill: '#6D4C41',
+    //             fontFamily: '"Comic Sans MS", cursive',
+    //             align: 'center'
+    //         }).setOrigin(0.5);
+    //
+    //         // 物品精灵
+    //         let sprite = this.add.sprite(0, -5, item.itemSprite)
+    //             .setFrame(item.frameIndex)
+    //             .setScale(1.7);
+    //
+    //         // 价格文本
+    //         let priceText = this.add.text(0, 33, `💰${item.itemPrize}`, {
+    //             fontSize: '15px',
+    //             fill: '#6D4C41',
+    //             fontFamily: '"Comic Sans MS", cursive',
+    //             align: 'center'
+    //         }).setOrigin(0.5);
+    //
+    //         // 加入子容器
+    //         itemBox.add([bgRect, nameText, sprite, priceText]);
+    //
+    //         // **存储原始 Y 位置**
+    //         itemBox.originalY = y;
+    //
+    //         // **设置交互（初始可见的物品才可交互）**
+    //         itemBox.setSize(90, 90);
+    //         if (y >= startY ) {
+    //             itemBox.setInteractive({ cursor: 'pointer' })
+    //                 .on('pointerdown', () => this.sceneController.startPlacingItem(item))
+    //                 .on('pointerover', () => bgRect.setFillStyle(0xFFF59D))
+    //                 .on('pointerout', () => bgRect.setFillStyle(0xFFFDE7));
+    //         }
+    //
+    //         // **存入数组，后续控制交互**
+    //         this.itemBoxes.push(itemBox);
+    //
+    //         // 将物品容器添加到大的 itemContainer
+    //         this.itemContainer.add(itemBox);
+    //     });
+    //
+    //     // 5) 计算最大滚动距离
+    //     // this.scrollY = 0;
+    //     // let maxScroll = Math.max(0, contentHeight - viewHeight);
+    //
+    //     // 5) 计算最大滚动距离
+    //     this.scrollY = 0;
+    //     let maxScroll = Math.max(0, contentHeight - viewHeight);
+    //
+    //     // 6) 创建滚动条
+    //     //  先定义滚动条位置、大小
+    //     let scrollbarX = startX + viewWidth - 57; // X位置可以微调
+    //     let scrollbarY = startY - 50;            // Y位置可再微调
+    //     let scrollbarWidth = 10;
+    //     let scrollbarHeight = viewHeight;
+    //
+    //     //  创建滚动条本体（背景）
+    //     let scrollbar = this.add.rectangle(scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, 0xFFF8E1)
+    //         .setOrigin(0, 0)
+    //         .setDepth(999);
+    //     this.itemElements.push(scrollbar);
+    //     //  创建滑块
+    //     //  如果内容小于等于一屏，则不需要滚动——可隐藏或固定滑块
+    //     if (contentHeight <= viewHeight) {
+    //         // 隐藏滚动条或让其不可拖动
+    //         scrollbar.setVisible(false);
+    //     }
+    //
+    //     // 计算滑块高度
+    //     let ratio = viewHeight / contentHeight;
+    //     // 如果 ratio >= 1，说明内容不满一页，可直接让滑块和滚动条同高或隐藏
+    //     let thumbHeight = ratio >= 1 ? scrollbarHeight : ratio * scrollbarHeight;
+    //
+    //     let scrollThumb = this.add.rectangle(scrollbarX, scrollbarY, scrollbarWidth, thumbHeight, 0x8D6E63)
+    //         .setOrigin(0, 0)
+    //         .setDepth(1000)
+    //         .setInteractive({ cursor: 'pointer' });
+    //     this.itemElements.push(scrollThumb);
+    //
+    //     if (ratio >= 1) {
+    //         // 若内容不够一页，也将滑块隐藏或设为不可移动
+    //         scrollThumb.setVisible(false);
+    //     }
+    //
+    //     // 7) 监听滚轮事件，实现滚动 & 同步滑块
+    //     this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+    //         let scrollSpeed = 30; // 滚动速度
+    //         this.itemContainer.y -= (deltaY > 0) ? scrollSpeed : -scrollSpeed;
+    //
+    //         // 限制 itemContainer 滚动范围
+    //         let maxScrollUp = startY;
+    //         let maxScrollDown = startY - (contentHeight - viewHeight);
+    //         if (this.itemContainer.y > maxScrollUp) {
+    //             this.itemContainer.y = maxScrollUp;
+    //         } else if (this.itemContainer.y < maxScrollDown) {
+    //             this.itemContainer.y = maxScrollDown;
+    //         }
+    //
+    //         // **同步 scrollThumb 滑块的位置**
+    //         if (maxScroll > 0) {
+    //             let scrollRatio = (this.itemContainer.y - maxScrollDown) / (maxScrollUp - maxScrollDown);
+    //             scrollThumb.y = scrollbarY + (1 - scrollRatio) * (scrollbarHeight - thumbHeight);
+    //         }
+    //
+    //         // **检查可视区域**
+    //         this.checkVisibleItems(scrollThumb, scrollbarY, scrollbarHeight, thumbHeight, contentHeight, viewHeight,startY);
+    //     });
+    //
+    //
+    //     // 8) 拖动滑块
+    //     this.input.setDraggable(scrollThumb);
+    //     scrollThumb.on('drag', (pointer, dragX, dragY) => {
+    //         if (maxScroll <= 0) return; // 不需要滚动
+    //
+    //         // 限制滑块只能在滚动条范围内移动
+    //         let newY = Phaser.Math.Clamp(
+    //             dragY,
+    //             scrollbarY,
+    //             scrollbarY + scrollbarHeight - thumbHeight
+    //         );
+    //         scrollThumb.y = newY;
+    //
+    //         // 计算滚动比例
+    //         let scrollRatio = (newY - scrollbarY) / (scrollbarHeight - thumbHeight);
+    //         // 将比例映射到 itemContainer
+    //         this.scrollY = -scrollRatio * maxScroll;
+    //         this.itemContainer.y = startY + this.scrollY;
+    //
+    //         // **检查可视区域**
+    //         this.checkVisibleItems(scrollThumb, scrollbarY, scrollbarHeight, thumbHeight, contentHeight, viewHeight,startY);
+    //     });
+    //
+    //     // // **初次检查可视区域**
+    //     // this.checkVisibleItems();
+    //     this.checkVisibleItems(scrollThumb, scrollbarY, scrollbarHeight, thumbHeight, contentHeight, viewHeight,startY);
+    // }
+
+// **检查 itemBox 是否在可视范围内**
+    checkVisibleItems(scrollThumb, scrollbarY, scrollbarHeight, thumbHeight, contentHeight, viewHeight,startY) {
+        let localTop = 0;
+        let localBottom = 469;
+
+        // **根据滚动条 scrollThumb 位置调整 localBottom**
+        let scrollRatio = (scrollThumb.y - scrollbarY) / (scrollbarHeight - thumbHeight);
+        let scrollOffset = scrollRatio * (contentHeight - viewHeight);
+
+        // localBottom 需要随着滚动增加/减少
+        localBottom += scrollOffset;
+        localTop += scrollOffset;
+
+        this.itemBoxes.forEach(box => {
+            // 计算物品的实际 Y 位置（相对于 itemContainer）
+            let boxY = box.originalY + (this.itemContainer.y - startY);
+
+            if (boxY + 45 < localTop || boxY - 45 > localBottom) {
+                box.disableInteractive(); // 超出可视范围，禁用交互
+            } else {
+                if (!box.input?.enabled) {
+                    box.setInteractive({ cursor: 'pointer' });
+                }
+            }
+        });
+    }
+
+
+
+
 
 
 
@@ -883,7 +1131,6 @@ export default class Scene extends Phaser.Scene {
         // 可选：移除滚轮监听，防止多次注册
         this.input.removeListener('wheel');
     }
-
 
 
 }

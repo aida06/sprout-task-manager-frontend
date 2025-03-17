@@ -1,36 +1,51 @@
 <template>
   <div id="app">
-    <!-- Navigation Bar (only shows on Home page) -->
-    <nav v-if="showNavbar" class="navbar">
+    <!-- 用 Element Plus 的 <el-menu> 作为容器 -->
+    <el-menu
+        mode="horizontal"
+        class="navbar"
+    >
+      <!-- 左侧容器：nav-left -->
       <div class="nav-left">
-        <router-link to="/home" class="nav-link">📝 Task Management</router-link>
-        <router-link to="/virtual-scene" class="nav-link">🏡 Virtual Scene</router-link>
-<!--        <router-link to="/focus-timer" class="nav-link">⏳Focus Timer</router-link>-->
-        <router-link to="/calendar" class="nav-link">📅 Calendar</router-link>
-        <router-link to="/data-dashboard" class="nav-link">📊 Data Dashboard</router-link>
+        <!-- 放菜单项 -->
+        <el-menu-item index="1">
+          <router-link to="/home">📝 Task Management</router-link>
+        </el-menu-item>
+        <el-menu-item index="2">
+          <router-link to="/virtual-scene">🌱 Sprout Island</router-link>
+        </el-menu-item>
+        <el-menu-item index="3">
+          <router-link to="/focus-timer">⏳ Focus Timer</router-link>
+        </el-menu-item>
+        <el-menu-item index="4">
+          <router-link to="/calendar">📅 Calendar</router-link>
+        </el-menu-item>
+        <el-menu-item index="5">
+          <router-link to="/data-dashboard">📊 Data Dashboard</router-link>
+        </el-menu-item>
       </div>
-      <!-- User Info Section -->
+
+      <!-- 右侧容器：nav-right -->
       <div class="nav-right">
         <span class="user-coins">💰 {{ userCoins }}</span>
-        <div class="user-profile" @click="toggleDropdown">
-          <img :src="userAvatar" alt="User Avatar" class="avatar" />
-        </div>
-        <div v-if="showDropdown" class="dropdown-menu">
-          <div class="menu-item"><strong>Username:</strong> {{ userName }}</div>
-<!--          <div class="menu-item"><strong>User ID:</strong> {{ userId }}</div>-->
-          <hr class="divider" /> <!-- 分割线 -->
-          <button @click="logout" class="logout-btn">Logout</button>
-        </div>
+        <el-dropdown>
+          <el-avatar :src="userAvatar" alt="User Avatar" class="avatar"></el-avatar>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item>{{ userName }}</el-dropdown-item>
+              <el-dropdown-item divided @click="logout">Logout</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
-    </nav>
-
-<!--    &lt;!&ndash; Logout Button (fixed at the top right corner) &ndash;&gt;-->
-<!--    <button v-if="showNavbar" class="logout-btn" @click="logout">Logout</button>-->
+    </el-menu>
 
     <!-- Router View -->
     <router-view></router-view>
   </div>
 </template>
+
+
 
 <script setup>
 import {computed, onMounted, provide, ref} from 'vue';
@@ -83,6 +98,7 @@ const fetchUserCoins = async () => {
 
 // **页面加载时获取用户积分**
 onMounted(fetchUserCoins);
+
 // onMounted(async () => {
 //   await fetchUserCoins();
 // });
@@ -91,62 +107,79 @@ onMounted(fetchUserCoins);
 <style scoped>
 /* Navbar Styles */
 .navbar {
-  width: 99%;  /* 让导航栏铺满整个屏幕 */
-  margin: 0 auto;  /* 让导航栏居中 */
-  background-color: #e3f2fd; /* Light blue background */
-  padding: 10px 10px;
   display: flex;
-  justify-content: space-between; /* 左右两边对齐 */
   align-items: center;
-  font-weight: bold;
-  border-radius: 12px; /* Rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-  flex-wrap: wrap;  /* 允许在小屏幕换行 */
+  justify-content: space-between; /* 关键 */
+  width: 100%;
+  /* 其他属性可以保持 */
+  /* 线性渐变，方向从上到下 */
+  background: linear-gradient(to bottom, #E8F5E9, #E0F2F1);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 30px 20px;
+
 }
 
-/* 左侧导航菜单 */
+/* 让导航里所有 a 都去掉下划线，并指定文字颜色 */
+.navbar a {
+  text-decoration: none;     /* 去掉下划线 */
+  color: #26A69A;     /* 字体 */
+  font-weight: bold;
+  font-size: 17px;
+}
+
+/* 悬停时也不要下划线 */
+.navbar a:hover {
+  text-decoration: none;
+}
+
+/* 选中的菜单项颜色 */
+.navbar :deep(.el-menu-item.is-active) {
+
+  border-bottom: 4px solid #80CBC4 !important; /* 蓝色指示线 */
+
+}
+
+/* 鼠标悬浮时的颜色 */
+.navbar :deep(.el-menu-item:hover) {
+  background-color: #B2DFDB !important; /* 绿色背景 */
+
+  border-radius: 8px; /* 让悬浮有一点圆角 */
+  transition: all 0.4s ease-in-out; /* 平滑过渡 */
+}
+
+/* 鼠标点击时的颜色 */
+.navbar :deep(.el-menu-item:active) {
+  background-color: #80CBC4 !important; /* 更深一点的绿色 */
+}
+
+
+
+/* 左侧容器：让链接水平排列并减少间距 */
 .nav-left {
   display: flex;
-  gap: 10px;  /* 让前面的文字靠近一些 */
-  flex-grow: 1;  /* 让左侧占据更多空间 */
+  align-items: center;
+  gap: 15px; /* 调整链接之间的间距，越小越紧凑 */
+
 }
 
-/* 右侧用户信息 */
+/* 右侧容器：让金币和头像对齐 */
 .nav-right {
   display: flex;
   align-items: center;
-  margin-left: auto;  /* 推动到最右 */
-  position: relative;
+  gap: 40px;
 }
 
-/* Navigation Links */
-.nav-link {
-  color: #1565c0;  /* Darker blue for contrast */
-  text-decoration: none;
-  padding: 10px 15px;
-  transition: background-color 0.4s, color 0.4s; /* Smooth hover transition */
-  border-radius: 8px; /* Slightly rounded corners for links */
+/* 覆盖 el-menu-item 的默认 padding，让链接更紧凑 */
+:deep(.el-menu-item) {
+  padding: 0 4px !important;
 }
 
-/* Hover Effect */
-.nav-link:hover {
-  background-color: #bbdefb; /* Lighter blue on hover */
-  color: #0d47a1;           /* Darker text color on hover */
-}
-
-
-/* 头像区域 */
-.user-profile {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
 
 .user-coins {
   font-size: 30px;
   font-weight: bold;
   color: #FFB300;
-  margin-right: 50px;
 }
 
 
@@ -158,63 +191,19 @@ onMounted(fetchUserCoins);
   transition: background-color 0.4s, color 0.4s; /* Smooth hover transition */
 }
 
+
 .avatar:hover {
-  background-color: #bbdefb; /* Lighter blue on hover */
-  color: #0d47a1;           /* Darker text color on hover */
+  background-color: #B2DFDB; /* Lighter blue on hover */
+
 }
 
-/* 下拉菜单 */
-.dropdown-menu {
-  position: absolute;
-  top: 50px;
-  right: 0;
-  width: 200px; /* 让菜单更大 */
-  background: white;
-  border-radius: 10px;
-  padding: 12px;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15); /* 增加阴影 */
-  font-size: 14px;
-}
-
-
-/* 菜单项 */
-.menu-item {
-  padding: 8px 12px;
-  color: #333;
-}
-
-/* 分割线 */
-.divider {
-  border: none;
-  height: 1px;
-  background: #ddd;
-  margin: 10px 0;
-}
-
-/* 退出按钮（与菜单字体一致） */
-.logout-btn {
-  width: 100%;
-  text-align: center;
-  padding: 10px;
-  background: none;
-  border: none;
-  color: #d9534f;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.logout-btn:hover {
-  background: #f8d7da;
-}
 
 /* General App Styles */
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
-  background-color: white;
+  background: transparent !important; /* 确保背景透明 */
   margin: 0;
-  padding: 0;
+  padding: 0px;
 }
 </style>
 
