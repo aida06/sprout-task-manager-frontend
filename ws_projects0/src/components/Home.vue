@@ -369,13 +369,6 @@ const selectTask = (task) => {
   selectedTask.value = selectedTask.value?.taskId === task.taskId ? null : { ...task };
 };
 
-// 开始任务并移动到完成列表
-// const completeTask = () => {
-//   if (!selectedTask.value) return;
-//
-//   completedTasks.value.push(selectedTask.value);
-//   selectedTask.value = null;
-// };
 
 const completeTask = async () => {
   if (!selectedTask.value) return;

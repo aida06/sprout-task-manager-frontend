@@ -18,7 +18,7 @@
           <router-link to="/focus-timer">⏳ Focus Timer</router-link>
         </el-menu-item>
         <el-menu-item index="4">
-          <router-link to="/calendar">📅 Calendar</router-link>
+          <router-link to="/calendar">📅 Schedule</router-link>
         </el-menu-item>
         <el-menu-item index="5">
           <router-link to="/data-dashboard">📊 Data Dashboard</router-link>

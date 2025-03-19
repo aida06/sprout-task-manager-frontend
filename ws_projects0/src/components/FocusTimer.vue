@@ -41,6 +41,11 @@
       <button class="light-button" @click="stopTimer(false)">
         <el-icon><Remove /></el-icon> Give Up
       </button>
+
+      <button class="light-button" @click="stopTimer(true)">
+        <el-icon><Check /></el-icon> Test
+      </button>
+
     </div>
 
     <!-- 🌟 Background 面板 -->
@@ -101,7 +106,7 @@
 import {ref, computed, onMounted, onUnmounted, inject} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
-import { PictureFilled, Picture, Headset, VideoPause, VideoPlay, Close, Remove } from '@element-plus/icons-vue'
+import {PictureFilled, Picture, Headset, VideoPause, VideoPlay, Close, Remove, Check} from '@element-plus/icons-vue'
 
 const route = useRoute();
 const router = useRouter();
@@ -113,8 +118,6 @@ const isPaused = ref(false);
 let timer = null;
 
 const userId = ref(localStorage.getItem("userId"));
-// const userCoins = inject("userCoins");
-// const selectedTask = inject("selectedTask");
 
 import { userTaskStore } from "../store/store.js";
 import {storeToRefs} from "pinia";
@@ -132,18 +135,9 @@ const formattedTime = computed(() => {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 });
 
-// 开始倒计时
-// const startTimer = () => {
-//   if (timer) return;
-//   timer = setInterval(() => {
-//     if (remainingTime.value > 0) {
-//       remainingTime.value--;
-//     } else {
-//       stopTimer();
-//       alert("Focus time is over! 🎉");
-//     }
-//   }, 1000);
-// };
+// 记录开始时间
+const startTime = ref(null);
+
 
 // **修改倒计时逻辑**
 const startTimer = () => {
@@ -170,29 +164,31 @@ const resumeTimer = () => {
   startTimer();
 };
 
-// 停止倒计时（返回主页）
-// const stopTimer = () => {
-//   clearInterval(timer);
-//   timer = null;
-//   remainingTime.value = totalDuration.value * 60;
-//   router.push("/home"); // 返回主页
-// };
 
-// **停止倒计时**
+// **停止(放弃)倒计时(返回主页)**
 const stopTimer = (isCompleted = false) => {
   clearInterval(timer);
   timer = null;
 
-  // 弹出不同的提示信息
+  // 弹出提示
   const message = isCompleted
       ? "Focus time is over! You obtain reward coins. 🎉"
       : "You gave up! No coins awarded.";
+  alert(message);
 
-  alert(message); // 先弹出提示
 
+  const durationInSeconds = totalDuration.value; // 确保 duration 以秒为单位
+// 计算 endTime = startTime + duration
+  const endTime = new Date(startTime.value.getTime() + durationInSeconds * 1000);
+
+  // 如果 isCompleted，则发送 axios 请求存储到数据库
+  if (isCompleted) {
+    saveFocusTimerData(endTime);
+  }
+
+  // 如果有 selectedTask，且 isCompleted，更新前端的积分和任务状态
   if (isCompleted && selectedTask.value) {
     updateUserCoins(selectedTask.value.rewardCoins);
-
     completedTasks.value.push(selectedTask.value);
     selectedTask.value = null;
   }
@@ -202,6 +198,30 @@ const stopTimer = (isCompleted = false) => {
     remainingTime.value = totalDuration.value * 60; // 重置倒计时
     router.push("/home"); // 返回主页
   }, 0);
+};
+
+
+// 保存计时结果到数据库
+const saveFocusTimerData = async (endTime) => {
+  try {
+    // 如果没有选定的任务名，可做个兜底值
+    const taskName = selectedTask.value
+        ? selectedTask.value.taskName
+        : "Unnamed";
+
+    const response = await axios.post("http://localhost:8080/focusTimer/saveFocus", {
+      userId: userId.value,
+      taskName: taskName,
+      duration: totalDuration.value,   // 秒或分钟，请与后端字段含义对应
+      successful: true,                // 1表示成功，0表示放弃
+      startTime: startTime.value.toISOString(),     // 传给后端，注意后端解析格式
+      endTime: endTime.toISOString(),
+    });
+
+    console.log("Focus timer data saved:", response.data);
+  } catch (err) {
+    console.error("Failed to save focus timer data:", err);
+  }
 };
 
 
@@ -222,6 +242,7 @@ const updateUserCoins = async (rewardCoins) => {
 
 // 组件挂载时启动倒计时
 onMounted(() => {
+  startTime.value = new Date(); // 或者 new Date().toISOString()
   startTimer();
 });
 
@@ -229,6 +250,7 @@ onMounted(() => {
 onUnmounted(() => {
   clearInterval(timer);
 });
+
 
 
 const showBackgroundPanel = ref(false);  // 控制背景面板显示
@@ -292,7 +314,7 @@ const soundList = ref([
   { value: "Brook", label: "Brook", img: "/src/sound/cover/Brook.jpg", audio: "/src/sound/Brook.mp3" },
   { value: "Wave", label: "Wave", img: "/src/sound/cover/Wave1.jpeg", audio: "/src/sound/Wave.mp3" },
   { value: "Rain", label: "Rain", img: "/src/sound/cover/Rain5.jpg", audio: "/src/sound/Rain.mp3" },
-  { value: "Fireplace", label: "Fireplace", img: "/src/sound/cover/Fire9.jpg", audio: "/src/sound/Fire.mp3" },
+  { value: "Fireplace", label: "Fireplace", img: "/src/sound/cover/Fire9.jpg", audio: "/src/sound/Fire1.mp3" },
   { value: "Write", label: "Write", img: "/src/sound/cover/Write.jpg", audio: "/src/sound/Write.mp3" },
   { value: "City", label: "City", img: "/src/sound/cover/City4.jpg", audio: "/src/sound/City.mp3" },
   { value: "Piano", label: "Piano", img: "/src/sound/cover/Piano.jpg", audio: "/src/sound/Piano.mp3" },
@@ -300,22 +322,6 @@ const soundList = ref([
 ]);
 
 const audioPlayer = ref(null);
-
-// 设置音效
-// const setSound = (sound) => {
-//   selectedSound.value = sound;
-//
-//   if (sound === 'none') {
-//     audioPlayer.value.pause();
-//     audioPlayer.value.src = '';
-//   } else {
-//     const audioSrc = soundList.value.find(s => s.value === sound)?.audio;
-//     if (audioSrc) {
-//       audioPlayer.value.src = audioSrc;
-//       audioPlayer.value.play();
-//     }
-//   }
-// };
 
 // 设置音效
 const setSound = (sound) => {

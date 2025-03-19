@@ -10,7 +10,7 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 
-// 关键一步：注册 Element Plus
+// 注册 Element Plus
 app.use(ElementPlus);
 
 // 最后挂载
