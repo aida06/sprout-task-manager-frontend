@@ -2,18 +2,18 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../components/Login.vue';
 import Signup from '../components/Signup.vue';
 import Home from '../components/Home.vue';
-import VirtualScene from '../components/VirtualScene.vue';
+import SproutIsland from '../components/SproutIsland.vue';
 import FocusTimer from '../components/FocusTimer.vue';
-import Calendar from '../components/Calendar.vue';
+import Schedule from '../components/Schedule.vue';
 import DataDashboard from '../components/DataDashboard.vue';
 
 const routes = [
     { path: '/', component: Login },
     { path: '/signup', component: Signup },
     { path: '/home', component: Home },
-    { path: '/virtual-scene', component: VirtualScene },
+    { path: '/sprout-island', component: SproutIsland },
     { path: '/focus-timer', component: FocusTimer },
-    { path: '/calendar', component: Calendar },
+    { path: '/schedule', component: Schedule },
     { path: '/data-dashboard', component: DataDashboard }
 ];
 

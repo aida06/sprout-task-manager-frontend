@@ -47,6 +47,9 @@
     <div class="pie-row">
       <div class="chart-container" ref="taskPieChart"></div>
     </div>
+
+
+
   </div>
 </template>
 
@@ -63,6 +66,8 @@ dayjs.extend(weekOfYear);
 
 export default {
   setup() {
+
+
     // ==============================
     // 1) 基础数据与引用
     // ==============================
@@ -621,6 +626,9 @@ button:active {
   height: 370px;
   min-width: 300px;
 }
+
+
+
 </style>
 
 

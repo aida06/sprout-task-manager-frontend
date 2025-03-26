@@ -12,13 +12,13 @@
           <router-link to="/home">📝 Task Management</router-link>
         </el-menu-item>
         <el-menu-item index="2">
-          <router-link to="/virtual-scene">🌱 Sprout Island</router-link>
+          <router-link to="/sprout-island">🌱 Sprout Island</router-link>
         </el-menu-item>
         <el-menu-item index="3">
           <router-link to="/focus-timer">⏳ Focus Timer</router-link>
         </el-menu-item>
         <el-menu-item index="4">
-          <router-link to="/calendar">📅 Schedule</router-link>
+          <router-link to="/schedule">📅 Schedule</router-link>
         </el-menu-item>
         <el-menu-item index="5">
           <router-link to="/data-dashboard">📊 Data Dashboard</router-link>
@@ -42,6 +42,29 @@
 
     <!-- Router View -->
     <router-view></router-view>
+
+    <!-- 悬浮按钮，位置 = drawerWidth + 20px（或 showAiDrawer 为 false 时回到40px） -->
+    <div
+        class="bubble-wrapper"
+        :class="{ 'drawer-open': showAiDrawer }"
+        :style="bubbleStyle"
+        @click="toggleAiDrawer"
+    >
+      <div class="bubble-icon">
+        <!-- 图标 -->
+        <span class="icon-emoji">🤖</span>
+        <!-- 文字 -->
+        <span class="icon-text">AI Helper</span>
+      </div>
+    </div>
+
+    <!-- 抽屉组件 -->
+    <AIHelper
+        :visible="showAiDrawer"
+        @close="showAiDrawer = false"
+        @update:width="onDrawerWidthChange"
+    />
+
   </div>
 </template>
 
@@ -53,6 +76,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { userTaskStore } from "./store/store.js";
 import axios from "axios";
 import {storeToRefs} from "pinia";
+import AIHelper from './components/AIHelper.vue'
 
 const route = useRoute();
 const router = useRouter();
@@ -102,9 +126,113 @@ onMounted(fetchUserCoins);
 // onMounted(async () => {
 //   await fetchUserCoins();
 // });
+
+// ===========================================
+// AI Helper 相关
+// ===========================================
+const showAiDrawer = ref(false)
+const drawerWidth = ref(400) // 默认宽度
+
+function toggleAiDrawer() {
+  showAiDrawer.value = !showAiDrawer.value
+}
+
+// 抽屉拖拽更新宽度回调
+function onDrawerWidthChange(newW) {
+  drawerWidth.value = newW
+}
+
+
+const bubbleStyle = computed(() => {
+  if (showAiDrawer.value) {
+    return {
+      right: `${drawerWidth.value - 138}px`, // 宽度170，只留100px 视觉可见
+      zIndex: 999
+    }
+  } else {
+    return {
+      right: '-138px', // 半隐藏
+      zIndex: 999
+    }
+  }
+})
+
+
+
 </script>
 
+
+
 <style scoped>
+
+
+.bubble-wrapper {
+  position: fixed;
+  bottom: 240px;
+  width: 170px;             /* 默认宽度只够图标 */
+  height: 50px;
+  border-radius: 50px;
+  background-color: #DCEDC8;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.16);
+  cursor: pointer;
+  transition: right 0.4s ease;
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  user-select: none;
+  overflow: hidden;        /* 隐藏超出的文字部分 */
+  pointer-events: auto;
+  padding: 0px 20px;          /* 给图标一点左右内边距 */
+}
+
+/* 图标 + 文字容器 */
+.bubble-icon {
+  display: flex;
+  align-items: center;
+}
+
+/* 图标的样式（单独调大小） */
+.icon-emoji {
+  font-size: 28px;  /* 图标更大 */
+  margin-right: 6px;
+}
+
+/* 文字的样式（默认隐藏） */
+.icon-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: #4E6B50;
+  display: none;   /* 默认不显示 */
+  white-space: nowrap; /* 防止自动换行 */
+}
+
+/* ============================= */
+/* 当抽屉关闭且鼠标悬停时，展开按钮宽度并显示文字 */
+/* ============================= */
+
+.bubble-wrapper:not(.drawer-open):hover {
+  background-color: #C5E1A5;
+  right: -50px !important;
+}
+
+/* 悬浮时显示文字 */
+.bubble-wrapper:not(.drawer-open):hover .icon-text {
+  display: inline-block;
+}
+
+/* ============================= */
+/* 如果抽屉打开时，你想一直显示文字 */
+/* ============================= */
+.bubble-wrapper.drawer-open:hover {
+  background-color: #C5E1A5;
+
+}
+
+
+
+
+
 /* Navbar Styles */
 .navbar {
   display: flex;
@@ -200,7 +328,7 @@ onMounted(fetchUserCoins);
 
 /* General App Styles */
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Segoe UI', sans-serif;;
   background: transparent !important; /* 确保背景透明 */
   margin: 0;
   padding: 0px;
