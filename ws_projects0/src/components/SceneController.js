@@ -14,10 +14,10 @@ export default class SceneController {
         // 把那两个 ref 拿过来
         this.userIdRef = scene.userIdRef
         this.userCoinsRef = scene.userCoinsRef
-        this.itemPrizeMap = {};
+        this.itemPriceMap = {};
         console.log("SceneController.js initialized with userCoins:", this.userCoinsRef.value);
 
-        this.loadItemPrizeMap();
+        this.loadItemPriceMap();
     }
 
     // **开始放置模式**
@@ -139,7 +139,7 @@ export default class SceneController {
 
 
     async purchaseItem(item) {
-        if (!this.userCoinsRef.value || this.userCoinsRef.value < item.itemPrize) {
+        if (!this.userCoinsRef.value || this.userCoinsRef.value < item.itemPrice) {
             console.error("Not enough coins!");
             alert("Not enough coins to buy this item!");
             return false; // 告诉外面“购买失败”
@@ -151,14 +151,14 @@ export default class SceneController {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     userId: this.userIdRef.value,
-                    rewardCoins: -Number(item.itemPrize)
+                    rewardCoins: -Number(item.itemPrice)
                 })
             });
 
             // 前端手动更新 userCoins
-            this.userCoinsRef.value = Number((this.userCoinsRef.value - item.itemPrize).toFixed(2));
+            this.userCoinsRef.value = Number((this.userCoinsRef.value - item.itemPrice).toFixed(2));
 
-            console.log(`Purchased item: ${item.itemId}, cost: ${item.itemPrize} coins. New balance: ${this.userCoinsRef.value}`);
+            console.log(`Purchased item: ${item.itemId}, cost: ${item.itemPrice} coins. New balance: ${this.userCoinsRef.value}`);
             return true; // 购买成功
         } catch (err) {
             console.error("Failed to update coins:", err);
@@ -174,9 +174,9 @@ export default class SceneController {
             this.currentItem = null;
             return;
         }
-        // this.loadItemPrizeMap();
+        // this.loadItemPriceMap();
         // 计算返还金币
-        const price = this.itemPrizeMap[newItem.itemId]; // 从本地 Map 取值
+        const price = this.itemPriceMap[newItem.itemId]; // 从本地 Map 取值
         if (price === undefined) {
             console.error(`Item ${newItem.itemId} price not found in map`);
             return;
@@ -273,7 +273,7 @@ export default class SceneController {
         }).setOrigin(0.5);
 
         console.log('Raw item data from backend:', this.currentItem);
-        console.log("Item Prize:", this.currentItem.itemPrize);
+        console.log("Item Price:", this.currentItem.itemPrice);
     }
 
 
@@ -296,15 +296,15 @@ export default class SceneController {
     //         console.error("Error deleting item:", error);
     //     }
     // }
-    // **初始化时拉取 itemPrizeMap**
-    async loadItemPrizeMap() {
+    // **初始化时拉取 itemPriceMap**
+    async loadItemPriceMap() {
         try {
-            const response = await fetch("http://localhost:8080/storeItems/itemPrizeMap");
+            const response = await fetch("http://localhost:8080/storeItems/itemPriceMap");
             if (!response.ok) throw new Error(await response.text());
-            this.itemPrizeMap = await response.json(); // 存储到前端
-            console.log("Loaded itemPrizeMap:", this.itemPrizeMap);
+            this.itemPriceMap = await response.json(); // 存储到前端
+            console.log("Loaded itemPriceMap:", this.itemPriceMap);
         } catch (error) {
-            console.error("Failed to load itemPrizeMap:", error);
+            console.error("Failed to load itemPriceMap:", error);
         }
     }
 
@@ -322,7 +322,7 @@ export default class SceneController {
     //             console.log(`Item ${item.belongingsId} deleted from database!`);
     //
     //             // 计算返还的金币（物品价格的一半）
-    //             const refundCoins = Number((item.itemPrize / 2).toFixed(2));
+    //             const refundCoins = Number((item.itemPrice / 2).toFixed(2));
     //
     //             // 发送后端请求，增加金币
     //             const coinResponse = await fetch("http://localhost:8080/user/updateCoins", {
@@ -369,7 +369,7 @@ export default class SceneController {
                 console.log(`Item ${item.belongingsId} deleted from database!`);
 
                 // 计算返还金币
-                const price = this.itemPrizeMap[item.itemId]; // 从本地 Map 取值
+                const price = this.itemPriceMap[item.itemId]; // 从本地 Map 取值
                 if (price === undefined) {
                     console.error(`Item ${item.itemId} price not found in map`);
                     return;

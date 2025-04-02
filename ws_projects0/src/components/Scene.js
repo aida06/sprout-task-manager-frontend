@@ -128,8 +128,8 @@ export default class Scene extends Phaser.Scene {
 
         //Animal
         this.load.spritesheet('cow', '/src/assets/sprites/Free Cow Sprites.png', {
-            frameWidth: 32,  // 每帧宽度
-            frameHeight: 32  // 每帧高度
+            frameWidth: 32,
+            frameHeight: 32
         });
 
         this.load.spritesheet('pink cow', '/src/assets/sprites/Pink cow animation sprites.png', {
@@ -347,6 +347,8 @@ export default class Scene extends Phaser.Scene {
         await this.loadStoreData();
         await this.loadItemSpriteMap();
         await this.loadFrameIndexMap();
+
+
         await this.loadUserBelongings();
 
         // 全局监听 pointermove: 让 ghostSprite 跟随鼠标
@@ -363,6 +365,8 @@ export default class Scene extends Phaser.Scene {
         this.input.mouse.disableContextMenu();  // 禁用右键菜单
 
     }
+
+
 
 
     createMap() {
@@ -577,7 +581,7 @@ export default class Scene extends Phaser.Scene {
     async loadStoreData() {
         try {
             const response = await fetch("http://localhost:8080/storeItems");
-            this.storeItems = await response.json();  // 得到 [{ itemId, itemName, itemType, itemSprite, itemPrize }, ...]
+            this.storeItems = await response.json();  // 得到 [{ itemId, itemName, itemType, itemSprite, itemPrice }, ...]
 
             // 构建标签（Tab）按钮
             this.createTypeTabs();
@@ -588,14 +592,15 @@ export default class Scene extends Phaser.Scene {
 
     // 4. 动态生成「物品类型」Tab 按钮，比如“Animal”、“Plant”、“Building”等
     createTypeTabs() {
-        const uniqueTypes = [...new Set(this.storeItems.map(item => item.itemType))];
+        const types = [...new Set(this.storeItems.map(item => item.itemType))];
 
         let startX = 1262;
         let startY = 85;
         let gapX = 113;
 
-        uniqueTypes.forEach((type, index) => {
-            let tabBg = this.add.rectangle(startX + index * gapX, startY, 100, 30, 0xFFFDE7)
+        types.forEach((type, index) => {
+            let tabBg = this.add.rectangle(startX + index * gapX, startY, 100, 30)
+                .setFillStyle(0xFFFDE7)
                 .setStrokeStyle(1.2, 0x8D6E63)
                 .setInteractive({ cursor: 'pointer' })
                 .setDepth(11)
@@ -628,8 +633,8 @@ export default class Scene extends Phaser.Scene {
         });
 
         // 默认选中第一个
-        if (uniqueTypes.length > 0) {
-            this.activateTab(uniqueTypes[0]);
+        if (types.length > 0) {
+            this.activateTab(types[0]);
         }
     }
 
@@ -645,7 +650,7 @@ export default class Scene extends Phaser.Scene {
             }
         });
         // 更新显示的物品
-        this.showItemsByType(selectedType);
+        this.showItems(selectedType);
     }
 
 
@@ -691,7 +696,7 @@ export default class Scene extends Phaser.Scene {
     //             .setScale(1.6);
     //
     //         // **4) 物品价格**
-    //         let priceText = this.add.text(0, 30, `💰${item.itemPrize}`, {
+    //         let priceText = this.add.text(0, 30, `💰${item.itemPrice}`, {
     //             fontSize: '15px',
     //             fill: '#6D4C41',
     //             fontFamily: '"Comic Sans MS", cursive',
@@ -713,7 +718,7 @@ export default class Scene extends Phaser.Scene {
     // }
 
 
-    showItemsByType(selectedType) {
+    showItems(selectedType) {
         // 0) 清理之前的元素
         this.clearItemElements();
         if (!this.storePanel.visible) return;
@@ -778,7 +783,7 @@ export default class Scene extends Phaser.Scene {
                 .setScale(1.7);
 
             // 价格文本
-            let priceText = this.add.text(0, 33, `💰${item.itemPrize}`, {
+            let priceText = this.add.text(0, 33, `💰${item.itemPrice}`, {
                 fontSize: '15px',
                 fill: '#6D4C41',
                 fontFamily: '"Comic Sans MS", cursive',
@@ -965,7 +970,7 @@ export default class Scene extends Phaser.Scene {
     //             .setScale(1.7);
     //
     //         // 价格文本
-    //         let priceText = this.add.text(0, 33, `💰${item.itemPrize}`, {
+    //         let priceText = this.add.text(0, 33, `💰${item.itemPrice}`, {
     //             fontSize: '15px',
     //             fill: '#6D4C41',
     //             fontFamily: '"Comic Sans MS", cursive',
@@ -1116,10 +1121,6 @@ export default class Scene extends Phaser.Scene {
             }
         });
     }
-
-
-
-
 
 
 
