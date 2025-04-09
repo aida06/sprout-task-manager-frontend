@@ -5,9 +5,8 @@
       <button @click="toggleExportMenu">Export</button>
       <div v-if="showExportMenu" class="export-menu">
         <button @click="exportAsPDF">PDF</button>
-        <button @click="exportAsHTML">HTML</button>
-        <button @click="exportAsPNG">PNG</button>
-        <button @click="exportAsJPEG">JPEG</button>
+        <button @click="exportAsImage('png')">PNG</button>
+        <button @click="exportAsImage('jpg')">JPG</button>
       </div>
     </div>
 
@@ -48,6 +47,11 @@
       <div class="chart-container" ref="taskPieChart"></div>
     </div>
 
+    <div class="text-report-section" ref="reportLogBlock">
+      <h3 style="font-size: 20px; color: #444;">Detailed Data Record</h3>
+
+      <pre>{{ reportLog }}</pre>
+    </div>
 
 
   </div>
@@ -86,6 +90,9 @@ export default {
 
     const timeOptions = ["Day", "Week", "Month", "Year"];
     const currentDate = ref(dayjs());
+
+    const reportLog = ref("")
+    const reportLogBlock = ref(null);
 
     // ==============================
     // 2) 日期显示与切换
@@ -398,6 +405,35 @@ export default {
           },
         ],
       });
+
+      // 生成简单文字描述
+      // let summaryText = `Detailed Data Records\n\n`
+      let summaryText = `Selected Time: ${displayDate.value}\n`
+      summaryText += `Number of Completed Tasks: ${completedCount.value}\n`
+      summaryText += `Number of Not Completed Tasks: ${notCompletedCount.value}\n\n`
+
+      // 比如，把专注时长分布也描述下
+      summaryText += `Focus Time Distribution (Bar Chart):\n`
+      focusLabels.forEach((label, i) => {
+        // focusData[i] 是对应时段的分钟数
+        summaryText += ` - ${label}: ${focusData[i].toFixed(1)} min\n`
+      })
+
+      // 完成率折线图
+      summaryText += `\nCompletion Rate (Line Chart):\n`
+      completionLabels.forEach((label, i) => {
+        summaryText += ` - ${label}: ${completionData[i].toFixed(1)}%\n`
+      })
+
+      // 饼图
+      summaryText += `\nTask Duration Distribution (Pie Chart):\n`
+      pieData.forEach(item => {
+        summaryText += ` - ${item.name}: ${item.value.toFixed(1)} min\n`
+      })
+
+      // 存入全局 reportLog
+      reportLog.value = summaryText
+
     };
 
     // ==============================
@@ -412,88 +448,102 @@ export default {
     };
 
     // =============== 2) 导出 PDF ===============
+    // const exportAsPDF = async () => {
+    //   showExportMenu.value = false; // 关闭菜单
+    //
+    //   // 选取要导出的 DOM 元素（可只导出图表部分，也可导出整个 .dashboard-container）
+    //   const element = dashboardContainer.value;
+    //
+    //   // 将其转换成 canvas
+    //   const canvas = await html2canvas(element, {
+    //     // 可以根据需要配置
+    //     scale: 2, // 提高分辨率
+    //   });
+    //   const imgData = canvas.toDataURL("image/png");
+    //
+    //   // 用 jsPDF 把图像塞进 PDF
+    //   const pdf = new jsPDF("p", "pt", "a4");
+    //   // 计算页面宽高 & 图片宽高
+    //   const pageWidth = pdf.internal.pageSize.getWidth();
+    //   const pageHeight = pdf.internal.pageSize.getHeight();
+    //   const imgWidth = canvas.width;
+    //   const imgHeight = canvas.height;
+    //
+    //   // 让图片适应 A4 大小
+    //   const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+    //   const displayWidth = imgWidth * ratio;
+    //   const displayHeight = imgHeight * ratio;
+    //
+    //   // 绘制到 PDF
+    //   pdf.addImage(imgData, "PNG", 0, 0, displayWidth, displayHeight);
+    //   pdf.save("dashboard.pdf");
+    // };
+
     const exportAsPDF = async () => {
-      showExportMenu.value = false; // 关闭菜单
-
-      // 选取要导出的 DOM 元素（可只导出图表部分，也可导出整个 .dashboard-container）
+      showExportMenu.value = false;
       const element = dashboardContainer.value;
+      const reportLogBlockEl = reportLogBlock.value;
 
-      // 将其转换成 canvas
-      const canvas = await html2canvas(element, {
-        // 可以根据需要配置
-        scale: 2, // 提高分辨率
-      });
+      // 1. 临时隐藏 reportLog 区域
+      const originalDisplay = reportLogBlockEl.style.display;
+      reportLogBlockEl.style.display = "none";
+
+      // 2. 截图
+      const canvas = await html2canvas(element, { scale: 2 });
       const imgData = canvas.toDataURL("image/png");
 
-      // 用 jsPDF 把图像塞进 PDF
+      // 3. 还原 display
+      reportLogBlockEl.style.display = originalDisplay;
+
+      // 4. 开始生成 PDF
       const pdf = new jsPDF("p", "pt", "a4");
-      // 计算页面宽高 & 图片宽高
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
+
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-
-      // 让图片适应 A4 大小
       const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
       const displayWidth = imgWidth * ratio;
       const displayHeight = imgHeight * ratio;
 
-      // 绘制到 PDF
       pdf.addImage(imgData, "PNG", 0, 0, displayWidth, displayHeight);
-      pdf.save("dashboard.pdf");
+
+      // 5. 添加纯净文字版报告
+      let textY = displayHeight + 20;
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(12);
+      const lines = pdf.splitTextToSize(reportLog.value, pageWidth - 40);
+      const lineHeight = 14;
+
+      lines.forEach((line) => {
+        if (textY > pageHeight - 20) {
+          pdf.addPage();
+          textY = 40;
+        }
+        pdf.text(line, 20, textY);
+        textY += lineHeight;
+      });
+
+      pdf.save("dashboard_report.pdf");
     };
 
-    // =============== 3) 导出 HTML ===============
-    const exportAsHTML = () => {
-      showExportMenu.value = false; // 关闭菜单
-      console.log("dashboardContainer:", dashboardContainer.value);
+    // 通用导出图片方法
+    const exportAsImage = async (format) => {
+      showExportMenu.value = false
+      const element = dashboardContainer.value
 
-      // 提取当前页面(或容器)的 HTML
-      // 1) 如果只想导出 .dashboard-container 内部，可以用 innerHTML
-      const htmlContent = dashboardContainer.value.outerHTML;
+      const canvas = await html2canvas(element, { scale: 2 })
 
-      // 2) 生成 Blob，并让用户下载
-      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
+      // 获取导出的 DataURL
+      const quality = format === 'jpeg' ? 0.9 : 1.0
+      const imgData = canvas.toDataURL(`image/${format}`, quality)
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "dashboard.html";
-      link.click();
+      const link = document.createElement("a")
+      link.href = imgData
+      link.download = `dashboard.${format}`
+      link.click()
+    }
 
-      // 释放资源
-      URL.revokeObjectURL(url);
-    };
-
-    // =============== 4) 导出 PNG ===============
-    const exportAsPNG = async () => {
-      showExportMenu.value = false;
-      const element = dashboardContainer.value;
-      const canvas = await html2canvas(element, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
-
-      // 下载为 .png 文件
-      const link = document.createElement("a");
-      link.href = imgData;
-      link.download = "dashboard.png";
-      link.click();
-    };
-
-    // =============== 5) 导出 JPEG ===============
-    const exportAsJPEG = async () => {
-      showExportMenu.value = false;
-      const element = dashboardContainer.value;
-      const canvas = await html2canvas(element, { scale: 2 });
-
-      // toDataURL 第二个参数可指定 JPEG 质量
-      const imgData = canvas.toDataURL("image/jpeg", 0.9);
-
-      // 下载为 .jpg 文件
-      const link = document.createElement("a");
-      link.href = imgData;
-      link.download = "dashboard.jpg";
-      link.click();
-    };
 
     return {
       dashboardContainer,
@@ -510,9 +560,9 @@ export default {
       showExportMenu,
       toggleExportMenu,
       exportAsPDF,
-      exportAsHTML,
-      exportAsPNG,
-      exportAsJPEG,
+      exportAsImage,
+      reportLog,
+      reportLogBlock,
     };
   },
 
@@ -525,6 +575,15 @@ export default {
   margin-top: 25px;
   text-align: center;
   position: relative;
+}
+
+.text-report-section pre {
+  font-family: "Helvetica", "Arial", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap; /* 自动换行 */
+  word-break: break-word; /* 避免长字符串撑爆 */
+  color: #333; /* 字体颜色柔一点 */
 }
 
 /* ====== 导出按钮样式优化 ====== */

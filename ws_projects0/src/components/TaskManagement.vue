@@ -146,15 +146,18 @@
 
 <script setup>
 
-import {ref, computed, onMounted, inject, provide} from "vue";
+import {ref, computed, onMounted} from "vue";
 import router from "../router/index.js";
 import axios from "axios";
 
-import { userTaskStore } from "../store/store.js";
-import {storeToRefs} from "pinia";
+// import { userTaskStore } from "../store/store.js";
+// import {storeToRefs} from "pinia";
 
 const userId = ref(localStorage.getItem("userId"));
 
+
+import { userTaskStore } from "../store/store.js";
+import {storeToRefs} from "pinia";
 const taskStore = userTaskStore();
 const { userCoins } = storeToRefs(taskStore);
 const { selectedTask } = storeToRefs(taskStore);
@@ -166,6 +169,21 @@ const tags = ref(["Default", "Study", "Work", "Health", "Finance"]);
 console.log("Initial tags:", tags.value);
 // 任务列表
 const tasks = ref([]);
+
+
+const fetchUserCoins = async () => {
+  if (!userId.value) return; // **如果 userId 为空，避免请求**
+
+  try {
+    const response = await axios.get("http://localhost:8080/user/coins", {
+      params: { userId: userId.value }
+    });
+    userCoins.value = response.data; // **确保正确存储数据**
+  } catch (err) {
+    console.error("Failed to fetch user coins:", err);
+  }
+};
+
 
 // 组件加载时，获取任务数据
 const loadTasks = async () => {

@@ -367,8 +367,6 @@ export default class Scene extends Phaser.Scene {
     }
 
 
-
-
     createMap() {
         // 读取 Tiled JSON 地图
         this.map = this.make.tilemap({ key: 'backgroundMap' });

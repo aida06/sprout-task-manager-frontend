@@ -103,10 +103,10 @@
 
 
 <script setup>
-import {ref, computed, onMounted, onUnmounted, inject} from "vue";
+import {ref, computed, onMounted, onUnmounted} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
-import {PictureFilled, Picture, Headset, VideoPause, VideoPlay, Close, Remove, Check} from '@element-plus/icons-vue'
+import {Picture, Headset, VideoPause, VideoPlay, Remove, Check} from '@element-plus/icons-vue'
 
 const route = useRoute();
 const router = useRouter();

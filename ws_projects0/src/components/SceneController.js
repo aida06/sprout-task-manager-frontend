@@ -1,5 +1,4 @@
 
-
 export default class SceneController {
     constructor(scene) {
         this.scene = scene;  // 绑定 Phaser 场景
@@ -277,25 +276,6 @@ export default class SceneController {
     }
 
 
-    // **删除物品**
-    // async deleteItem(item) {
-    //     try {
-    //         const response = await fetch(`http://localhost:8080/userBelongings/delete/${item.belongingsId}`, {
-    //             method: 'DELETE'
-    //         });
-    //
-    //         if (response.ok) {
-    //             console.log("Item deleted from database!");
-    //             item.destroy();
-    //             this.clearItemOptions();
-    //             this.currentItem = null;
-    //         } else {
-    //             console.error("Failed to delete item:", await response.text());
-    //         }
-    //     } catch (error) {
-    //         console.error("Error deleting item:", error);
-    //     }
-    // }
     // **初始化时拉取 itemPriceMap**
     async loadItemPriceMap() {
         try {
@@ -308,52 +288,6 @@ export default class SceneController {
         }
     }
 
-    // **删除物品（出售并获得一半金币）**
-    // async deleteItem(item) {
-    //     if (!item) return;
-    //
-    //     try {
-    //         // 发送请求，删除数据库中的物品
-    //         const response = await fetch(`http://localhost:8080/userBelongings/delete/${item.belongingsId}`, {
-    //             method: 'DELETE'
-    //         });
-    //
-    //         if (response.ok) {
-    //             console.log(`Item ${item.belongingsId} deleted from database!`);
-    //
-    //             // 计算返还的金币（物品价格的一半）
-    //             const refundCoins = Number((item.itemPrice / 2).toFixed(2));
-    //
-    //             // 发送后端请求，增加金币
-    //             const coinResponse = await fetch("http://localhost:8080/user/updateCoins", {
-    //                 method: "POST",
-    //                 headers: { "Content-Type": "application/json" },
-    //                 body: JSON.stringify({
-    //                     userId: this.userIdRef.value,
-    //                     rewardCoins: refundCoins
-    //                 })
-    //             });
-    //
-    //             if (coinResponse.ok) {
-    //                 // 前端同步更新用户金币数
-    //                 this.userCoinsRef.value = Number((this.userCoinsRef.value + refundCoins).toFixed(2));
-    //                 console.log(`Sold item: ${item.belongingsId}, received: ${refundCoins} coins. New balance: ${this.userCoinsRef.value}`);
-    //             } else {
-    //                 console.error("Failed to update coins:", await coinResponse.text());
-    //             }
-    //
-    //             // 从场景中移除物品
-    //             item.destroy();
-    //             this.clearItemOptions();
-    //             this.currentItem = null;
-    //
-    //         } else {
-    //             console.error("Failed to delete item:", await response.text());
-    //         }
-    //     } catch (error) {
-    //         console.error("Error deleting item:", error);
-    //     }
-    // }
 
     // **删除物品**
     async deleteItem(item) {

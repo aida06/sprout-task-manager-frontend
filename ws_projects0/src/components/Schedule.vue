@@ -289,7 +289,7 @@ const updateScheduleEvent = async () => {
   }
 
   try {
-    await axios.post("http://localhost:8080/schedule/updateReminder", {
+    await axios.put("http://localhost:8080/schedule/updateReminder", {
       scheduleId,
       title,
       startTime: new Date(startTime).toISOString(),

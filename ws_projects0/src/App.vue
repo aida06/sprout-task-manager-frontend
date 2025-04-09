@@ -9,19 +9,25 @@
       <div class="nav-left">
         <!-- 放菜单项 -->
         <el-menu-item index="1">
-          <router-link to="/home">📝 Task Management</router-link>
+          <router-link to="/task-management">📝 Task Management</router-link>
         </el-menu-item>
         <el-menu-item index="2">
           <router-link to="/sprout-island">🌱 Sprout Island</router-link>
         </el-menu-item>
-        <el-menu-item index="3">
-          <router-link to="/focus-timer">⏳ Focus Timer</router-link>
-        </el-menu-item>
+<!--        <el-menu-item index="3">-->
+<!--          <router-link to="/focus-timer">⏳ Focus Timer</router-link>-->
+<!--        </el-menu-item>-->
         <el-menu-item index="4">
           <router-link to="/schedule">📅 Schedule</router-link>
         </el-menu-item>
         <el-menu-item index="5">
           <router-link to="/data-dashboard">📊 Data Dashboard</router-link>
+        </el-menu-item>
+        <el-menu-item index="6">
+          <router-link to="/badges">🎖️ Badges</router-link>
+        </el-menu-item>
+        <el-menu-item index="7">
+          <router-link to="/help">💡 Help</router-link>
         </el-menu-item>
       </div>
 
@@ -54,12 +60,12 @@
         <!-- 图标 -->
         <span class="icon-emoji">🤖</span>
         <!-- 文字 -->
-        <span class="icon-text">AI Helper</span>
+        <span class="icon-text">AI Chatbot</span>
       </div>
     </div>
 
     <!-- 抽屉组件 -->
-    <AIHelper
+    <AiChatbot
         :visible="showAiDrawer"
         @close="showAiDrawer = false"
         @update:width="onDrawerWidthChange"
@@ -71,12 +77,12 @@
 
 
 <script setup>
-import {computed, onMounted, provide, ref} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { userTaskStore } from "./store/store.js";
 import axios from "axios";
 import {storeToRefs} from "pinia";
-import AIHelper from './components/AIHelper.vue'
+import AiChatbot from './components/AIChatbot.vue'
 
 const route = useRoute();
 const router = useRouter();
@@ -157,14 +163,11 @@ const bubbleStyle = computed(() => {
   }
 })
 
-
-
 </script>
 
 
 
 <style scoped>
-
 
 .bubble-wrapper {
   position: fixed;
@@ -212,8 +215,8 @@ const bubbleStyle = computed(() => {
 /* ============================= */
 
 .bubble-wrapper:not(.drawer-open):hover {
-  background-color: #C5E1A5;
-  right: -50px !important;
+  background-color: rgb(197, 225, 165, 0.7);
+  right: -36px !important;
 }
 
 /* 悬浮时显示文字 */
@@ -222,15 +225,12 @@ const bubbleStyle = computed(() => {
 }
 
 /* ============================= */
-/* 如果抽屉打开时，你想一直显示文字 */
+/* 如果抽屉打开时，一直显示文字 */
 /* ============================= */
 .bubble-wrapper.drawer-open:hover {
-  background-color: #C5E1A5;
+  background-color: rgb(197, 225, 165, 0.7);
 
 }
-
-
-
 
 
 /* Navbar Styles */
@@ -239,7 +239,6 @@ const bubbleStyle = computed(() => {
   align-items: center;
   justify-content: space-between; /* 关键 */
   width: 100%;
-  /* 其他属性可以保持 */
   /* 线性渐变，方向从上到下 */
   background: linear-gradient(to bottom, #E8F5E9, #E0F2F1);
   border-radius: 8px;
@@ -251,7 +250,7 @@ const bubbleStyle = computed(() => {
 /* 让导航里所有 a 都去掉下划线，并指定文字颜色 */
 .navbar a {
   text-decoration: none;     /* 去掉下划线 */
-  color: #26A69A;     /* 字体 */
+  color: #26A69A;
   font-weight: bold;
   font-size: 17px;
 }
@@ -263,16 +262,13 @@ const bubbleStyle = computed(() => {
 
 /* 选中的菜单项颜色 */
 .navbar :deep(.el-menu-item.is-active) {
-
   border-bottom: 4px solid #80CBC4 !important; /* 蓝色指示线 */
-
 }
 
 /* 鼠标悬浮时的颜色 */
 .navbar :deep(.el-menu-item:hover) {
-  background-color: #B2DFDB !important; /* 绿色背景 */
-
-  border-radius: 8px; /* 让悬浮有一点圆角 */
+  background-color: #B2DFDB !important;
+  border-radius: 8px;
   transition: all 0.4s ease-in-out; /* 平滑过渡 */
 }
 
@@ -280,7 +276,6 @@ const bubbleStyle = computed(() => {
 .navbar :deep(.el-menu-item:active) {
   background-color: #80CBC4 !important; /* 更深一点的绿色 */
 }
-
 
 
 /* 左侧容器：让链接水平排列并减少间距 */
@@ -328,11 +323,13 @@ const bubbleStyle = computed(() => {
 
 /* General App Styles */
 #app {
-  font-family: 'Segoe UI', sans-serif;;
+  font-family: 'Segoe UI', sans-serif;
   background: transparent !important; /* 确保背景透明 */
   margin: 0;
   padding: 0px;
 }
+
+
 </style>
 
 
