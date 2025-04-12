@@ -4,7 +4,7 @@
 
 <!--<script>-->
 <!--import Phaser from 'phaser';-->
-<!--import Scene from './Scene.js';-->
+<!--import SproutIslandScene from './SproutIslandScene.js';-->
 <!--import {ref, watchEffect} from "vue";-->
 
 
@@ -67,7 +67,7 @@
 <!--        parent: 'game-container',-->
 <!--        backgroundColor: '#e3f2fd',-->
 <!--        pixelArt: true,-->
-<!--        scene: [new Scene({userId: this.userId, userCoins: this.userCoins})],-->
+<!--        scene: [new SproutIslandScene({userId: this.userId, userCoins: this.userCoins})],-->
 <!--        scale: {-->
 <!--          mode: Phaser.Scale.RESIZE,-->
 <!--          autoCenter: Phaser.Scale.CENTER_BOTH-->
@@ -89,7 +89,7 @@ import axios from 'axios'
 import { userTaskStore } from '../store/store.js'
 import { storeToRefs } from 'pinia'
 import Phaser from 'phaser'
-import Scene from './Scene.js'
+import SproutIslandScene from './SproutIslandScene.js'
 
 // 1) 在 setup 里定义/获取所有数据
 const userId = ref(localStorage.getItem('userId') || '')
@@ -119,7 +119,7 @@ async function initGame() {
     backgroundColor: '#e3f2fd',
     pixelArt: true,
     // **注意这里传“ref 对象本身”，而不是 userCoins.value**
-    scene: [new Scene({ userId, userCoins })],
+    scene: [new SproutIslandScene({ userId, userCoins })],
     scale: {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH

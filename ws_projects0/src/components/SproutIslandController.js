@@ -1,5 +1,4 @@
-
-export default class SceneController {
+export default class SproutIslandController {
     constructor(scene) {
         this.scene = scene;  // 绑定 Phaser 场景
         this.isPlacing = false;
@@ -14,7 +13,7 @@ export default class SceneController {
         this.userIdRef = scene.userIdRef
         this.userCoinsRef = scene.userCoinsRef
         this.itemPriceMap = {};
-        console.log("SceneController.js initialized with userCoins:", this.userCoinsRef.value);
+        console.log("SproutIslandController.js initialized with userCoins:", this.userCoinsRef.value);
 
         this.loadItemPriceMap();
     }
@@ -57,12 +56,12 @@ export default class SceneController {
             }
         });
 
-        this.scene.input.keyboard.on('keydown-Q', this.confirmPlacement, this);
-        this.scene.input.keyboard.on('keydown-W', this.cancelPlacingItem, this);
+        this.scene.input.keyboard.on('keydown-Q', this.confirmPlace, this);
+        this.scene.input.keyboard.on('keydown-W', this.cancelPlace, this);
     }
 
     // **按 Q 确认放置**
-    async confirmPlacement() {
+    async confirmPlace() {
         if (!this.isPlacing) return;
         console.log('Placing item at:', this.ghostSprite.x, this.ghostSprite.y);
 
@@ -71,7 +70,7 @@ export default class SceneController {
     }
 
     // **按 W 取消放置**
-    cancelPlacingItem() {
+    cancelPlace() {
         if (this.ghostSprite) {
             this.ghostSprite.destroy();
             this.ghostSprite = null;
@@ -84,8 +83,8 @@ export default class SceneController {
         this.placingItem = null;
         this.isPlacing = false;
 
-        this.scene.input.keyboard.off('keydown-Q', this.confirmPlacement, this);
-        this.scene.input.keyboard.off('keydown-W', this.cancelPlacingItem, this);
+        this.scene.input.keyboard.off('keydown-Q', this.confirmPlace, this);
+        this.scene.input.keyboard.off('keydown-W', this.cancelPlace, this);
     }
 
 
@@ -133,7 +132,7 @@ export default class SceneController {
             console.error("Error storing item:", error);
         }
 
-        this.cancelPlacingItem();
+        this.cancelPlace();
     }
 
 
@@ -235,7 +234,7 @@ export default class SceneController {
         this.saleButton = this.scene.add.rectangle(optionX + 25, optionY, 45, 30, 0xEF9A9A)
             .setStrokeStyle(1, 0xFFFFFF)
             .setInteractive({ cursor: 'pointer' })
-            // .on('pointerdown', () => this.deleteItem(newItem))
+            // .on('pointerdown', () => this.sellItem(newItem))
             // 悬浮时显示提示文字
             .on('pointerover', () => {
                 this.refundTooltip = this.scene.add.text(
@@ -258,7 +257,7 @@ export default class SceneController {
                 }
             })
             .on('pointerdown', () => {
-                this.deleteItem(newItem);
+                this.sellItem(newItem);
                 if (this.refundTooltip) {
                     this.refundTooltip.destroy();
                     this.refundTooltip = null;
@@ -290,7 +289,7 @@ export default class SceneController {
 
 
     // **删除物品**
-    async deleteItem(item) {
+    async sellItem(item) {
         if (!item) return;
 
         try {
@@ -399,12 +398,12 @@ export default class SceneController {
             }
         });
 
-        this.scene.input.keyboard.on('keydown-Q', this.confirmMovingItem, this);
-        this.scene.input.keyboard.on('keydown-W', this.cancelMovingItem, this);
+        this.scene.input.keyboard.on('keydown-Q', this.confirmMove, this);
+        this.scene.input.keyboard.on('keydown-W', this.cancelMove, this);
     }
 
 
-    async confirmMovingItem() {
+    async confirmMove() {
         if (!this.isMoving || !this.ghostSprite) return;
 
         let x = this.ghostSprite.x;
@@ -440,11 +439,11 @@ export default class SceneController {
 
         this.movingSprite.setPosition(x, y);
         this.movingSprite.setVisible(true);
-        this.cancelMovingItem();
+        this.cancelMove();
     }
 
 
-    cancelMovingItem() {
+    cancelMove() {
         this.isMoving = false;
         if (this.movingSprite) {
             this.movingSprite.setVisible(true);
@@ -459,8 +458,8 @@ export default class SceneController {
             this.ghostText = null;
         }
 
-        this.scene.input.keyboard.off('keydown-Q', this.confirmMovingItem, this);
-        this.scene.input.keyboard.off('keydown-W', this.cancelMovingItem, this);
+        this.scene.input.keyboard.off('keydown-Q', this.confirmMove, this);
+        this.scene.input.keyboard.off('keydown-W', this.cancelMove, this);
     }
 
 

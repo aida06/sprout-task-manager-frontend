@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
-import SceneController from './SceneController.js';
+import SproutIslandController from './SproutIslandController.js';
 
 
-export default class Scene extends Phaser.Scene {
+export default class SproutIslandScene extends Phaser.Scene {
     constructor({userId, userCoins}) {
         super({ key: 'SceneKey' });
 
@@ -19,10 +19,10 @@ export default class Scene extends Phaser.Scene {
 
         this.belongings = []
 
-        console.log("Scene.js initialized with userCoins:", this.userCoinsRef.value);
+        console.log("SproutIslandScene.js initialized with userCoins:", this.userCoinsRef.value);
 
         // 创建一个控制器，并把自己传进去
-        this.sceneController = new SceneController(this);
+        this.sceneController = new SproutIslandController(this);
     }
 
     preload() {
