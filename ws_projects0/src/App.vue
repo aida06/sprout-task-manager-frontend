@@ -1,13 +1,12 @@
 <template>
   <div id="app">
-    <!-- 用 Element Plus 的 <el-menu> 作为容器 -->
     <el-menu
+        v-if="showNavbar"
         mode="horizontal"
         class="navbar"
     >
-      <!-- 左侧容器：nav-left -->
+      <!-- Left container: nav-left -->
       <div class="nav-left">
-        <!-- 放菜单项 -->
         <el-menu-item index="1">
           <router-link to="/task-management">📝 Task Management</router-link>
         </el-menu-item>
@@ -31,7 +30,7 @@
         </el-menu-item>
       </div>
 
-      <!-- 右侧容器：nav-right -->
+      <!-- Right container: nav-right -->
       <div class="nav-right">
         <span class="user-coins">💰 {{ userCoins }}</span>
         <el-dropdown>
@@ -49,8 +48,9 @@
     <!-- Router View -->
     <router-view></router-view>
 
-    <!-- 悬浮按钮，位置 = drawerWidth + 20px（或 showAiDrawer 为 false 时回到40px） -->
+    <!-- Hover button, position = drawerWidth + 20px (or return to 40px if showAiDrawer is false) -->
     <div
+        v-if="showNavbar"
         class="bubble-wrapper"
         :class="{ 'drawer-open': showAiDrawer }"
         :style="bubbleStyle"
@@ -64,7 +64,6 @@
       </div>
     </div>
 
-    <!-- 抽屉组件 -->
     <AiChatbot
         :visible="showAiDrawer"
         @close="showAiDrawer = false"
@@ -88,18 +87,18 @@ const route = useRoute();
 const router = useRouter();
 
 // Show Navbar only on /home and related pages
-const showNavbar = computed(() => route.path !== '/' && route.path !== '/signup');
+const showNavbar = computed(() => route.path !== '/' && route.path !== '/signup' && route.path !== '/focus-timer');
 
-// 用户信息
+// User information
 const userId = ref(localStorage.getItem("userId"));
 const userName = ref(localStorage.getItem("userName"));
-const userAvatar = ref("https://api.iconify.design/heroicons:user-circle.svg"); // 默认头像
+const userAvatar = ref("https://api.iconify.design/heroicons:user-circle.svg"); // Default avatar
 
 const taskStore = userTaskStore();
 const { userCoins } = storeToRefs(taskStore);
 
 
-// 下拉菜单控制
+// Drop-down menu control
 const showDropdown = ref(false);
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value;
@@ -112,30 +111,30 @@ const logout = () => {
   router.push('/');
 };
 
-// **获取用户积分**
+// Obtain user credits
 const fetchUserCoins = async () => {
-  if (!userId.value) return; // **如果 userId 为空，避免请求**
+  if (!userId.value) return; // If userId is empty, avoid the request
 
   try {
     const response = await axios.get("http://localhost:8080/user/coins", {
       params: { userId: userId.value }
     });
-    userCoins.value = response.data; // **确保正确存储数据**
+    userCoins.value = response.data;
   } catch (err) {
     console.error("Failed to fetch user coins:", err);
   }
 };
 
-// **页面加载时获取用户积分**
+// Get user coins when the page loads
 onMounted(fetchUserCoins);
 
 // onMounted(async () => {
 //   await fetchUserCoins();
 // });
 
-// ===========================================
-// AI Helper 相关
-// ===========================================
+// ===========================
+// AI Helper related section
+// ===========================
 const showAiDrawer = ref(false)
 const drawerWidth = ref(400) // 默认宽度
 
@@ -143,7 +142,7 @@ function toggleAiDrawer() {
   showAiDrawer.value = !showAiDrawer.value
 }
 
-// 抽屉拖拽更新宽度回调
+// Drawer drag-and-drop updates width callback
 function onDrawerWidthChange(newW) {
   drawerWidth.value = newW
 }
@@ -152,12 +151,12 @@ function onDrawerWidthChange(newW) {
 const bubbleStyle = computed(() => {
   if (showAiDrawer.value) {
     return {
-      right: `${drawerWidth.value - 138}px`, // 宽度170，只留100px 视觉可见
+      right: `${drawerWidth.value - 138}px`,
       zIndex: 999
     }
   } else {
     return {
-      right: '-138px', // 半隐藏
+      right: '-138px',
       zIndex: 999
     }
   }
@@ -244,7 +243,6 @@ const bubbleStyle = computed(() => {
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 30px 20px;
-
 }
 
 /* 让导航里所有 a 都去掉下划线，并指定文字颜色 */
@@ -311,6 +309,7 @@ const bubbleStyle = computed(() => {
   height: 50px;
   border-radius: 50%;
   margin-right: 10px;
+  background-color: #B2DFDB;
   transition: background-color 0.4s, color 0.4s; /* Smooth hover transition */
 }
 
@@ -324,8 +323,9 @@ const bubbleStyle = computed(() => {
 /* General App Styles */
 #app {
   font-family: 'Segoe UI', sans-serif;
-  background: transparent !important; /* 确保背景透明 */
+  background:  #F9FBF7 !important; /* 确保背景透明 */
   margin: 0;
+  height: 99vh;
   padding: 0px;
 }
 

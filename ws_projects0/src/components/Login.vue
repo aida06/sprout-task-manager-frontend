@@ -1,6 +1,7 @@
 <template>
   <div class="login-container">
-    <h1>Log In</h1>
+    <h1>🌱 Sprout</h1>
+<!--    <h2>Log In</h2>-->
     <input v-model="username" placeholder="Username" class="input-field" />
     <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Password" class="input-field" />
     <button @click="login" class="login-btn">Login</button>
@@ -15,24 +16,14 @@ import {ref} from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 
-const username = ref('');  // 用户名输入
-const password = ref('');  // 密码输入
-const showPassword = ref(false); // 控制密码显示/隐藏
-const errorMessage = ref(''); // 存储错误信息
+const username = ref('');
+const password = ref('');
+const showPassword = ref(false);
+const errorMessage = ref('');
 const router = useRouter();
 
-// 原来的: 无论输入什么直接登录
-// const login = () => {
-//   if (username.value && password.value) {
-//     localStorage.setItem('token', 'mock-token');
-//     router.push('/home');
-//   } else {
-//     alert('Please enter username and password');
-//   }
-// };
 
-
-// 处理用户登录
+// Processing user login
 const login = async () => {
   if (!username.value || !password.value) {
     errorMessage.value = "Please enter username and password";
@@ -40,19 +31,18 @@ const login = async () => {
   }
 
   try {
-    // 发送 API 请求到后端
     const response = await axios.post("http://localhost:8080/user/login", {
       username: username.value,
       password: password.value
     });
 
-    // 登录成功，存储用户 ID 并跳转
+    // Log in successfully, store the user ID and jump
     localStorage.setItem("userId", response.data.userId);
-    localStorage.setItem("userName", username.value); // 现在存储 username
-    router.push("/home"); // 跳转到首页
+    localStorage.setItem("userName", username.value);   // store username
+    router.push("/task-management");   // Go to task-management page
 
   } catch (error) {
-    // 处理登录失败的情况
+    // Handle login failures
     errorMessage.value = "Invalid username or password";
   }
 };
@@ -68,63 +58,79 @@ body {
 }
 
 .login-container {
-  max-width: 480px;
-  margin: 100px auto;
+  max-width: 100%; /* 设置容器最大宽度 */
+  height: 105vh;    /* 设置容器填充屏幕高度 */
+  display: flex;
+  flex-direction: column;  /* 竖直排列子元素 */
+  justify-content: center; /* 居中对齐 */
+  align-items: center;     /* 水平居中 */
   padding: 20px;
-  background-color: white;   /* 保持白色背景 */
+  background-color: #F9FBF7;
   border-radius: 10px;
   text-align: center;
-  box-shadow: none; /* 移除阴影 */
-  border: none;     /* 移除边框 */
+  box-shadow: none;
+  border: none;
+  margin: -100px auto;
 }
 
 h1 {
-  color: #333;
+  font-size: 40px;
+  font-family: "Comic Sans MS", sans-serif;
+  color: #4e6b50;
+  font-weight: bold;
+  margin-bottom: 45px;
+  text-shadow: 0px 2px 5px rgba(0, 0, 0, 0);
+}
+
+h2 {
+  color: #4e6b50;
   margin-bottom: 20px;
 }
 
 .input-field {
-  width: 100%;
-  padding: 12px;
+  width: 30%; /* 宽度适应屏幕 */
+  padding: 15px;
   margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
   box-sizing: border-box;
-  font-size: 14px;
+  font-size: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .error-message {
-  color: #666;
-  font-size: 12px;
+  color: #4e6b50;
+  font-size: 16px;
   text-align: left;
   margin: 2px 0 10px 5px;
 }
 
-
 .login-btn {
-  background-color: #42b983;
+  font-weight: bold;
+  background-color: #81C784;
   margin: 10px 0;
   color: white;
   border: none;
   padding: 12px;
-  width: 100%;
+  width: 30%;
   cursor: pointer;
   border-radius: 5px;
-  font-size: 16px;
+  font-size: 19px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 .login-btn:hover {
-  background-color: #36876a;
+  background-color: #66BB6A;
 }
 
 p {
   margin-top: 15px;
-  font-size: 14px;
-  color: #666;
+  font-size: 16px;
+  color: #4e6b50;
 }
 
 a {
-  color: #42b983;
+  color: #66BB6A;
   text-decoration: none;
   font-weight: bold;
 }
@@ -133,6 +139,7 @@ a:hover {
   text-decoration: underline;
 }
 </style>
+
 
 
 

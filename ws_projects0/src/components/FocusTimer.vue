@@ -3,12 +3,12 @@
     <!-- 倒计时圆圈 -->
     <div class="timer-circle">
       <svg width="300" height="300" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="90" stroke="#F5F5F5" stroke-width="12" fill="none"/>  # 灰色背景圆
+        <circle cx="100" cy="100" r="90" stroke="rgb(245, 245, 245,1)" stroke-width="12" fill="none"/>  # 灰色背景圆
         <circle
             cx="100"
             cy="100"
             r="90"
-            stroke="#B2DFDB"
+            stroke="rgb(176, 190, 197,0.8)"
             stroke-width="12"
             fill="none"
             stroke-dasharray="565.48"
@@ -42,16 +42,16 @@
         <el-icon><Remove /></el-icon> Give Up
       </button>
 
-      <button class="light-button" @click="stopTimer(true)">
-        <el-icon><Check /></el-icon> Test
-      </button>
+<!--      <button class="light-button" @click="stopTimer(true)">-->
+<!--        <el-icon><Check /></el-icon> Test-->
+<!--      </button>-->
 
     </div>
 
-    <!-- 🌟 Background 面板 -->
+    <!-- Background 面板 -->
     <el-dialog v-model="showBackgroundPanel" title="Select Timer Background">
       <div>
-        <!-- 🌈 圆形 Tab 切换不同颜色的壁纸 -->
+        <!-- 圆形 Tab 切换不同颜色的壁纸 -->
         <div class="color-tabs">
           <button
               v-for="(color, index) in Object.keys(backgroundCategories)"
@@ -121,6 +121,7 @@ const userId = ref(localStorage.getItem("userId"));
 
 import { userTaskStore } from "../store/store.js";
 import {storeToRefs} from "pinia";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 const taskStore = userTaskStore();
 const { userCoins } = storeToRefs(taskStore);
@@ -171,10 +172,31 @@ const stopTimer = (isCompleted = false) => {
   timer = null;
 
   // 弹出提示
+  // const message = isCompleted
+  //     ? "Focus time is over! You obtain reward coins. 🎉"
+  //     : "You gave up! No coins awarded.";
+  // alert(message);
+
   const message = isCompleted
       ? "Focus time is over! You obtain reward coins. 🎉"
       : "You gave up! No coins awarded.";
-  alert(message);
+
+  ElMessageBox.confirm(
+      message,  // 显示的提示信息
+      {
+        confirmButtonText: 'OK',  // 确认按钮文字
+        type: isCompleted ? 'success' : 'warning',  // 根据 isCompleted 设置颜色类型
+        showCancelButton: false,  // 不显示取消按钮
+        closeOnClickModal: false, // 禁止点击背景关闭弹窗
+        showClose: false, // 禁用关闭按钮
+      }
+  )
+      .then(() => {
+        // ElMessage.success('You have confirmed the action!');
+        // 在确认后执行跳转和倒计时重置
+        remainingTime.value = totalDuration.value * 60; // 重置倒计时
+        router.push("/task-management"); // 返回主页
+      });
 
 
   const durationInSeconds = totalDuration.value; // 确保 duration 以秒为单位
@@ -194,10 +216,10 @@ const stopTimer = (isCompleted = false) => {
   }
 
   // 让 alert 完成后再执行跳转
-  setTimeout(() => {
-    remainingTime.value = totalDuration.value * 60; // 重置倒计时
-    router.push("/home"); // 返回主页
-  }, 0);
+  // setTimeout(() => {
+  //   remainingTime.value = totalDuration.value * 60; // 重置倒计时
+  //   router.push("/task-management"); // 返回主页
+  // }, 0);
 };
 
 
@@ -265,7 +287,11 @@ const backgroundCategories = ref({
     "src/wallpaper/Green/ForestStation.png",
     "src/wallpaper/Green/RainyStreet.png",
     "src/wallpaper/Green/ButterflyForest.png",
-    "src/wallpaper/Green/GrassLand.png"
+    "src/wallpaper/Green/GrassLand.png",
+    "src/wallpaper/Green/CourtyardWater.png",
+    "src/wallpaper/Green/Friendship.png",
+    "src/wallpaper/Green/ForestBeam.png",
+    "src/wallpaper/Green/Lake.png"
   ],
   "Blue": [
     "src/wallpaper/Blue/NightStudy.png",
@@ -418,7 +444,7 @@ const setSound = (sound) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 91.5vh;
+  height: 98vh;
   font-family: Arial, sans-serif;
   margin-top: 0px; /* 让整个内容向下移动 */
 
@@ -471,7 +497,7 @@ const setSound = (sound) => {
 }
 
 
-/* 🌞 Light mode 按钮样式 */
+/* Light mode 按钮样式 */
 .light-button {
   display: flex;
   flex-direction: column;  /* 让图标和文字垂直排列 */
@@ -544,7 +570,7 @@ const setSound = (sound) => {
 }
 
 
-/* 🌈 颜色分类 Tabs */
+/* 颜色分类 Tabs */
 .color-tabs {
   display: flex;
   gap: 30px;

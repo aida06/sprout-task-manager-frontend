@@ -1,15 +1,14 @@
 <template>
   <div class="signup-container">
-    <h1>Create an Account</h1>
-<!--    <input v-model="username" placeholder="Username" class="input-field" />-->
-<!--    <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Password" class="input-field" />-->
-    <!-- 用户名输入框 -->
+    <h1>🌱 Sprout</h1>
+<!--    <h2>Create an Account</h2>-->
+    <!-- User name input field -->
     <input v-model="username" @input="handleUsernameInput" placeholder="Username" class="input-field" />
     <p v-if="usernameError" class="error-message">{{ usernameError }}</p>
-    <!-- 密码输入框 -->
+    <!-- Password input field -->
     <input :type="showPassword ? 'text' : 'password'" v-model="password" @input="handlePasswordInput" placeholder="Password" class="input-field"/>
     <p v-if="passwordError" class="error-message">{{ passwordError }}</p>
-    <!-- 确认密码输入框 -->
+    <!-- Confirm the password input box -->
     <input :type="showPassword ? 'text' : 'password'" v-model="confirmPassword" @input="handleConfirmPasswordInput" placeholder="Confirm Password" class="input-field"/>
     <p v-if="confirmPasswordError" class="error-message">{{ confirmPasswordError }}</p>
 
@@ -24,7 +23,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import Swal from "sweetalert2";
+import {ElMessage} from "element-plus";
 
 const username = ref('');
 const password = ref('');
@@ -36,20 +35,10 @@ const confirmPasswordError = ref('');
 const generalError = ref('');
 const router = useRouter();
 
-// 原来的: 无论输入什么直接注册
-// const signup = () => {
-//   if (username.value && password.value.length >= 8) {
-//     alert('Account created successfully!');
-//     router.push('/');
-//   } else {
-//     alert('Make sure username and password are valid (at least 8 characters)');
-//   }
-// };
-
 
 let debounceTimer = null; // 用于防抖的计时器
 
-/** 🔍 处理输入时触发防抖检查 */
+// 处理输入时触发防抖检查
 const handleUsernameInput = () => {
   clearTimeout(debounceTimer); // 取消上次的计时器
   debounceTimer = setTimeout(() => {
@@ -57,12 +46,8 @@ const handleUsernameInput = () => {
   }, 500); // 等待 500ms
 };
 
-/** 🔍 检查用户名是否已存在 */
+// 检查用户名是否已存在
 const checkUsernameExists = async () => {
-  // if (!username.value.trim()) {
-  //   usernameError.value = ""; // 允许用户名为空，不报错
-  //   return;
-  // }
 
   try {
     const response = await axios.get(`http://localhost:8080/user/check-existUser`, {
@@ -114,17 +99,7 @@ const signup = async () => {
       password: password.value,
     });
 
-    // alert("Account created successfully!");
-    // 使用 SweetAlert2 美化弹框
-    await Swal.fire({
-      title: "Success!",
-      text: "Account created successfully!",
-      icon: "success",
-      confirmButtonText: "OK",
-      timer: 3000, // 2秒后自动关闭
-      timerProgressBar: true,
-    });
-
+   ElMessage.success("Account created successfully!");
     router.push("/");
   } catch (error) {
     generalError.value = error.response?.data?.error || "Registration failed.";
@@ -133,7 +108,6 @@ const signup = async () => {
 </script>
 
 <style scoped>
-/* 全局白色背景 */
 body {
   background-color: white;
   margin: 0;
@@ -142,66 +116,80 @@ body {
 }
 
 .signup-container {
-  max-width: 480px;
-  margin: 100px auto;
+  max-width: 100%; /* 设置容器最大宽度 */
+  height: 105vh;    /* 设置容器填充屏幕高度 */
+  display: flex;
+  flex-direction: column;  /* 竖直排列子元素 */
+  justify-content: center; /* 居中对齐 */
+  align-items: center;     /* 水平居中 */
   padding: 20px;
-  background-color: white;
+  background-color: #F9FBF7;
   border-radius: 10px;
   text-align: center;
   box-shadow: none;
   border: none;
+  margin: -100px auto;
 }
 
-/* 标题样式 */
 h1 {
-  color: #333;
+  font-size: 40px;
+  font-family: "Comic Sans MS", sans-serif;
+  color: #4e6b50;
+  font-weight: bold;
+  margin-bottom: 45px;
+  text-shadow: 0px 2px 5px rgba(0, 0, 0, 0);
+}
+
+h2 {
+  color: #4e6b50;
   margin-bottom: 20px;
 }
 
-
 .input-field {
-  width: 100%;
-  padding: 12px;
+  width: 30%; /* 宽度适应屏幕 */
+  padding: 15px;
   margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
   box-sizing: border-box;
-  font-size: 14px;
+  font-size: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .error-message {
-  color: #666;
-  font-size: 12px;
+  color: #4e6b50;
+  font-size: 16px;
   text-align: left;
   margin: 2px 0 10px 5px;
 }
 
-/* 按钮样式 */
 .signup-btn {
-  background-color: #007bff;
+  font-weight: bold;
+  background-color: #4DB6AC;
   margin: 10px 0;
   color: white;
   border: none;
   padding: 12px;
-  width: 100%;
+  width: 30%;
   cursor: pointer;
   border-radius: 5px;
-  font-size: 16px;
+  font-size: 19px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 .signup-btn:hover {
-  background-color: #0056b3;
+  background-color: #26A69A;
 }
 
-/* 辅助文字 */
+/* Auxiliary text */
 p {
   margin-top: 15px;
-  font-size: 14px;
-  color: #666;
+  font-size: 16px;
+  color: #4e6b50;
 }
 
 a {
-  color: #007bff;
+  color: #26A69A;
   text-decoration: none;
   font-weight: bold;
 }

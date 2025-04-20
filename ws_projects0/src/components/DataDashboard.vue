@@ -2,38 +2,40 @@
   <div class="dashboard-container" ref="dashboardContainer">
     <!-- ===== 导出按钮和下拉菜单 ===== -->
     <div class="export-wrapper">
-      <button @click="toggleExportMenu">Export</button>
+      <button class="export-buttons" @click="toggleExportMenu">Export</button>
       <div v-if="showExportMenu" class="export-menu">
-        <button @click="exportAsPDF">PDF</button>
-        <button @click="exportAsImage('png')">PNG</button>
-        <button @click="exportAsImage('jpg')">JPG</button>
+        <button class="export-buttons" @click="exportAsPDF">PDF</button>
+        <button class="export-buttons" @click="exportAsImage('png')">PNG</button>
+        <button class="export-buttons" @click="exportAsImage('jpg')">JPG</button>
       </div>
     </div>
 
-    <!-- 时间维度切换按钮 -->
-    <div class="filter-buttons">
-      <button
-          v-for="option in timeOptions"
-          :key="option"
-          @click="selectedTime = option"
-          :class="{ active: selectedTime === option }"
-      >
+
+    <el-radio-group v-model="selectedTime" size="small" class="time-radio-group">
+      <!-- 每个 el-radio-button 的 label 值，与 selectedTime 绑定时进行匹配 -->
+      <el-radio-button v-for="option in timeOptions" :label="option" :key="option">
         {{ option }}
-      </button>
-    </div>
+      </el-radio-button>
+    </el-radio-group>
 
     <!-- 翻页按钮和当前日期显示 -->
-    <div class="navigation-buttons">
-      <button @click="changeDate(-1)">←</button>
+    <div class="navigation">
+      <button class="filter-buttons" @click="changeDate(-1)"><el-icon><ArrowLeftBold /></el-icon></button>
+      &nbsp;
       <span class="current-date">{{ displayDate }}</span>
-      <button @click="changeDate(1)">→</button>
+      &nbsp;
+      <button class="filter-buttons" @click="changeDate(1)"><el-icon><ArrowRightBold /></el-icon></button>
     </div>
+
 
     <!-- 已完成 / 未完成 统计 -->
     <div class="completion-stats">
       <span>Completed: {{ completedCount }} </span>
       &nbsp;&nbsp;
       <span>Not Completed: {{ notCompletedCount }}</span>
+    </div>
+    <div class="pie-row">
+      <div class="chart-container" ref="taskPieChart"></div>
     </div>
 
     <!-- 第一行图表：左-专注时间柱状图；右-完成率折线图 -->
@@ -43,9 +45,9 @@
     </div>
 
     <!-- 第二行：第三个饼图（只统计“成功”任务的时长占比） -->
-    <div class="pie-row">
-      <div class="chart-container" ref="taskPieChart"></div>
-    </div>
+<!--    <div class="pie-row">-->
+<!--      <div class="chart-container" ref="taskPieChart"></div>-->
+<!--    </div>-->
 
     <div class="text-report-section" ref="reportLogBlock">
       <h3 style="font-size: 20px; color: #444;">Detailed Data Record</h3>
@@ -65,13 +67,17 @@ import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import {ArrowLeftBold, ArrowRightBold} from "@element-plus/icons-vue";
 
 dayjs.extend(weekOfYear);
 
+
+
 export default {
+  components: {ArrowRightBold, ArrowLeftBold},
   setup() {
 
-
+    const userId = ref(localStorage.getItem('userId') || '');
     // ==============================
     // 1) 基础数据与引用
     // ==============================
@@ -130,7 +136,7 @@ export default {
     // ==============================
     const fetchFocusTimeData = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/focusTimer");
+        const res = await axios.get(`http://localhost:8080/focusTimer/users/${userId.value}`);
         return res.data;
       } catch (error) {
         console.error("Get timer data failed:", error);
@@ -572,6 +578,9 @@ export default {
 
 <style scoped>
 .dashboard-container {
+  background-color: #F9FBF7;
+  width: 100%;
+  height: 270vh;
   margin-top: 25px;
   text-align: center;
   position: relative;
@@ -581,49 +590,49 @@ export default {
   font-family: "Helvetica", "Arial", sans-serif;
   font-size: 16px;
   line-height: 1.6;
-  white-space: pre-wrap; /* 自动换行 */
-  word-break: break-word; /* 避免长字符串撑爆 */
+  white-space: pre-wrap;
+  word-break: break-word;
   color: #333; /* 字体颜色柔一点 */
 }
 
-/* ====== 导出按钮样式优化 ====== */
+
+
+:deep .el-radio-button__inner {
+  padding: 8px 20px !important;
+  background-color: #FFFFFF !important;
+  color: #4e6b50 !important;
+  font-weight: 600 !important;
+  font-size: 18px !important;
+  border: 1px solid #C5E1A5;
+  border-radius: 0px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+:deep .el-radio-button__inner:hover {
+  background-color: rgb(220, 237, 200,0.6) !important; /* 悬浮时的背景颜色 */
+}
+
+
+:deep .el-radio-button.is-active .el-radio-button__inner {
+  background-color: #DCEDC8 !important; /* 选中时的背景色 */
+
+  border: 1px solid #C5E1A5 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+
 .export-wrapper {
   position: absolute;
   top: 0;
-  left: 0;
+  left: 20px;
 }
 
-/* 按钮基础样式 */
-button {
-  background: #DCEDC8;
-  color: #689F38;
-  border: none;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: bold;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-}
 
-/* 悬浮（hover）效果 */
-button:hover {
-  background: #C5E1A5;
-  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
-  transform: translateY(-1px);
-}
-
-/* 点击（active）效果 */
-button:active {
-  transform: scale(0.95);
-  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* 导出菜单 */
 .export-menu {
   background-color: #fff;
-  border: 1.5px solid #ECEFF1;
+  border: 1.5px solid #C5E1A5;
   border-radius: 6px;
   margin-top: 5px;
   padding: 5px;
@@ -634,12 +643,13 @@ button:active {
 
 .export-menu button {
   background: #FFFFFF;
-  border: 1.5px solid #F5F5F5;
+  border: 1.5px solid #F1F8E9;
   padding: 8px 12px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  font-size: 14px;
   border-radius: 4px;
+  font-weight: 600;
+  color: #4e6b50;
 }
 
 /* 悬浮菜单项 */
@@ -649,19 +659,55 @@ button:active {
 }
 
 
-.filter-buttons button {
-  margin: 5px 6px; /* 上下 5px，左右 8px */
-  padding: 10px 16px;
+.filter-buttons {
+  margin: 5px 5px;
+  padding: 6px 14px;
+  border: 1px solid #C5E1A5;
+  background-color: #DCEDC8;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4e6b50;
+  cursor: pointer;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-.navigation-buttons {
-  margin: 5px 8px;
-  align-items: center;  /* 让按钮和日期居中对齐 */
-  gap: 20px;  /* 设置按钮和日期之间的间距 */
+.filter-buttons:hover {
+  background-color: rgb(197, 225, 165,0.8) ;
+}
+
+.export-buttons {
+  margin: 5px 5px;
+  padding: 6px 14px;
+  border: 1px solid #C5E1A5;
+  background-color: #DCEDC8;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #4e6b50;
+  cursor: pointer;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.export-buttons:hover {
+  background-color: rgb(197, 225, 165,0.8) ;
+}
+
+.navigation {
+  margin-top: 10px;
+  align-items: center;
+  color: #4e6b50;
+  font-weight: 600;
+  font-size: 18px;
 }
 
 .completion-stats {
-  margin: 10px 0;
+  margin-top: 10px;
+  color: #4e6b50;
+  font-weight: 600;
+  font-size: 18px;
 }
 
 .charts-row {
@@ -669,7 +715,8 @@ button:active {
   justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 15px;
+  margin-top: -40px;
+
 }
 
 .pie-row {
@@ -677,22 +724,16 @@ button:active {
   justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 .chart-container {
   width: 43%;
-  height: 370px;
+  height: 360px;
   min-width: 300px;
 }
 
 
-
 </style>
-
-
-
-
-
 
 

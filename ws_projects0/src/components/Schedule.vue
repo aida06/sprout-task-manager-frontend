@@ -1,4 +1,5 @@
 <template>
+  <div class="schedule-container">
   <div class="calendar-container">
     <!-- Vue Cal 日历 -->
     <vue-cal
@@ -99,6 +100,7 @@
       </template>
     </el-dialog>
   </div>
+  </div>
 </template>
 
 
@@ -108,7 +110,7 @@ import "vue-cal/dist/vuecal.css";
 import VueCal from "vue-cal";
 import axios from "axios";
 import {ElMessage, ElNotification} from "element-plus";
-const userId = ref(localStorage.getItem("userId"));
+const userId = ref(localStorage.getItem('userId') || '');
 const events = ref([]); // 日历事件
 
 
@@ -183,11 +185,9 @@ function setupReminders() {
 }
 
 
-
-
 const fetchSchedules = async () => {
   try {
-    const res = await axios.get("http://localhost:8080/schedule");
+    const res = await axios.get(`http://localhost:8080/schedule/users/${userId.value}`);
     const data = res.data;
 
     events.value = data.map(sch => {
@@ -352,14 +352,19 @@ const closeModal = () => {
 };
 
 
-
-
 </script>
 
 
 
 
 <style scoped>
+.schedule-container {
+  background-color: #F9FBF7;
+  width: 100%;
+  height: 95vh;
+
+}
+
 /* 日历容器 */
 .calendar-container {
   max-width: 1500px;
@@ -382,15 +387,15 @@ const closeModal = () => {
   right: 20px;
   z-index: 1000;
 
-  /* ✅ 背景颜色 & 字体颜色 */
+  /* 背景颜色 & 字体颜色 */
   background-color: #C5E1A5;  /* 绿色背景 */
   color: #FFFFFF;                /* 白色文字 */
 
-  /* ✅ 字体样式 */
+  /* 字体样式 */
   font-size: 16px;
   font-weight: 600;
 
-  /* ✅ 按钮样式 */
+  /* 按钮样式 */
   padding: 10px 16px;
   border: none;
   border-radius: 5px;
@@ -499,7 +504,7 @@ const closeModal = () => {
 
 
 /* 星期标题背景 & 字体颜色 */
-:deep(.vuecal__weekdays-headings ) {
+:deep(.vuecal__weekdays-headings) {
   background-color: rgb(241, 248, 233, 0.5) !important;
   color: #4E6B50 !important;
 }
@@ -573,7 +578,6 @@ const closeModal = () => {
 }
 
 
-
 /* 鼠标悬停时变手型 */
 :deep(.vuecal__event) {
   cursor: pointer;
@@ -606,7 +610,7 @@ const closeModal = () => {
   overflow: hidden;
   text-overflow: ellipsis;
 
-  /* ✅ 添加居中样式 */
+  /* 添加居中样式 */
   display: flex;
   align-items: center;     /* 垂直居中 */
   justify-content: center; /* 水平居中 */
@@ -614,12 +618,10 @@ const closeModal = () => {
 }
 
 
-
 :deep(.vuecal__event.custom-event:hover) {
   background-color: #DCEDC8 !important;
   cursor: pointer;
 }
-
 
 
 /* 弹窗整体样式 */
@@ -700,13 +702,5 @@ const closeModal = () => {
   padding-top: 10px;
 }
 
-
-
-
 </style>
-
-
-
-
-
 
