@@ -1,5 +1,4 @@
 <template>
-  <!-- 抽屉 -->
   <el-drawer
       v-model="localVisible"
       direction="rtl"
@@ -9,15 +8,13 @@
       :append-to-body="false"
       class="drawer-container"
   >
-    <!-- 头部 -->
+
     <div class="drawer-header">
       <span class="drawer-title">👋 Welcome, How can I help you today?</span>
       <el-button icon="Close" link @click="closeDrawer" />
     </div>
 
-    <!-- 主体内容 -->
     <div class="drawer-body">
-      <!-- 对话区域 -->
       <div ref="messagesContainer" class="qa-conversation">
         <div v-for="(msg, index) in messages" :key="index"
              class="message" :class="msg.sender">
@@ -30,7 +27,7 @@
         </div>
       </div>
 
-      <!-- 输入区域 -->
+      <!-- Input area -->
       <div class="qa-input-bar">
         <el-input
             type="textarea"
@@ -41,15 +38,7 @@
             class="input-area"
         />
 
-        <!-- 按钮区 :disabled="!userQuestion.trim() || isLoading"-->
         <div class="button-area">
-<!--          <el-button-->
-<!--              class="search-button"-->
-<!--              :class="{ 'active-search-button': isSearchActive }"-->
-<!--              @click="toggleSearch"-->
-<!--          >-->
-<!--            🌐 Internet Search-->
-<!--          </el-button>-->
           <el-tooltip
               placement="top"
               effect="dark"
@@ -75,7 +64,6 @@
             </el-upload>
           </el-tooltip>
 
-          <!-- 🡅 发送按钮：圆形按钮 + 向上箭头 :disabled="!userQuestion.trim()"  -->
           <el-button
               class="send-button"
               @click="sendQuestion"
@@ -86,12 +74,10 @@
       </div>
     </div>
 
-    <!-- 把手：用户点击并拖拽它 -->
     <div
         class="drawer-handle"
         @mousedown="onHandleMouseDown"
     >
-      <!-- 两条竖线图标，可以是图片/emoji -->
       <div class="handle-icon">
         ||
       </div>
@@ -116,10 +102,8 @@ const props = defineProps({
   }
 })
 
-// 新增自定义事件：'update:width'
 const emits = defineEmits(['close', 'update:width'])
 
-// 抽屉可见性
 const localVisible = ref(props.visible)
 watch(() => props.visible, (val) => {
   localVisible.value = val
@@ -129,17 +113,13 @@ watch(localVisible, (val) => {
 })
 
 
-
 function closeDrawer() {
   localVisible.value = false
 }
 
-// =========================
-// 抽屉宽度
-// =========================
+
 const drawerWidth = ref(400)
 
-// 拖拽相关
 let isDragging = false
 let startX = 0
 let startWidth = 0
@@ -175,16 +155,14 @@ function onMouseUp() {
 }
 
 
-// =========================
-// 问答相关
-// =========================
-
+// ============================
+// Question-and-answer related
+// ============================
 import { ChatOpenAI } from "@langchain/openai"
 // import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search"
 import { createOpenAIFunctionsAgent, AgentExecutor } from "langchain/agents";
 import {ChatPromptTemplate, MessagesPlaceholder} from "@langchain/core/prompts";
-
 // import Tesseract from "tesseract.js"
 
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf"
@@ -193,11 +171,9 @@ import {marked} from "marked";
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc
 
 
-// 环境变量配置（需要创建.env.local文件）
+// Environment variable configuration (.env.local)
 // const GPT_API_BASE = import.meta.env.VITE_GPT_API_BASE
 // const SERP_API_KEY = import.meta.env.VITE_SERP_API_KEY
-
-
 const GPT_API_KEY = import.meta.env.VITE_GPT_API_KEY
 const TAVILY_API_KEY = import.meta.env.VITE_TAVILY_API_KEY
 const VISION_API_KEY = import.meta.env.VITE_VISION_API_KEY
@@ -208,7 +184,7 @@ const messages = ref([])
 const isLoading = ref(false)
 const messagesContainer = ref(null)
 
-// 自动滚动到底部
+// Automatically scroll to the bottom
 const scrollToBottom = () => {
   nextTick(() => {
     if (messagesContainer.value) {
@@ -217,19 +193,19 @@ const scrollToBottom = () => {
   })
 }
 
-// 消息处理
+// Message processing
 const addMessage = (sender, text) => {
   messages.value.push({
     sender,
     text,
-    html: marked.parse(text), // 使用 marked 转成 HTML
+    html: marked.parse(text), // Use marked to convert to HTML
     timestamp: new Date().toLocaleTimeString()
   })
   scrollToBottom()
 }
 
 
-// 发送问题到 API
+// Send the question to the API
 const sendQuestion = async () => {
   uploadFileList.value = []
   const questionText = userQuestion.value.trim()
@@ -255,7 +231,7 @@ const sendQuestion = async () => {
       })
     ]
 
-    const recentMessages = messages.value.slice(-20) // 取最近20条
+    const recentMessages = messages.value.slice(-20) // Take the most recent 20 items
     const historyMessages = recentMessages.map(msg => {
       return msg.sender === "user"
           ? ["user", msg.text]
@@ -290,23 +266,21 @@ const sendQuestion = async () => {
   } finally {
     isLoading.value = false
 
-    //  清除上传文件信息
+    //  Clear the information of the uploaded files
     uploadedFiles.value = []
     fileContent.value = ""
 
-    // 清空 el-upload 的文件列表
     if (uploadRef.value) {
       uploadRef.value.clearFiles()
     }
   }
 }
 
-// 上传文件
+
 const fileContent = ref("")
-const uploadedFiles = ref([]) // 收集上传文件名
+const uploadedFiles = ref([])
 const uploadRef = ref(null)
 const uploadFileList = ref([])
-
 
 const onFileChange = async (uploadFile) => {
   console.log("File uploaded:", uploadFile)
@@ -359,12 +333,11 @@ const extractPDF = async (file) => {
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i)
 
-        // 尝试获取文字内容
         const content = await page.getTextContent()
         const textItems = content.items.map((item) => item.str).filter(t => t.trim() !== "")
         let pageText = textItems.join(" ")
 
-        // 如果页面没有文字，则渲染为图像并用 Vision OCR
+        // If there is no text on the page, render it as an image and use Vision OCR
         if (!pageText || pageText.length < 5) {
           const viewport = page.getViewport({ scale: 2.0 })
           const canvas = document.createElement("canvas")
@@ -375,7 +348,6 @@ const extractPDF = async (file) => {
           await page.render({ canvasContext: context, viewport }).promise
           const dataUrl = canvas.toDataURL("image/png")
 
-          // 转 base64 内容
           const base64 = dataUrl.replace(/^data:image\/(png|jpg);base64,/, "")
           const ocrResult = await fetch(
               `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`,
@@ -406,12 +378,6 @@ const extractPDF = async (file) => {
   })
 }
 
-// const extractImage = async (file) => {
-//   const imageUrl = URL.createObjectURL(file)
-//   const { data: { text } } = await Tesseract.recognize(imageUrl, 'eng')
-//   return text
-// }
-
 
 const extractImageWithVisionAPI = async (file) => {
   const reader = new FileReader()
@@ -423,7 +389,6 @@ const extractImageWithVisionAPI = async (file) => {
             new Uint8Array(reader.result)
                 .reduce((data, byte) => data + String.fromCharCode(byte), '')
         )
-
         const response = await fetch(
             `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`,
             {
@@ -447,7 +412,6 @@ const extractImageWithVisionAPI = async (file) => {
         reject(err)
       }
     }
-
     reader.readAsArrayBuffer(file)
   })
 }
@@ -457,7 +421,6 @@ const extractImageWithVisionAPI = async (file) => {
 
 
 <style>
-
 .loading-indicator {
   display: flex;
   align-items: center;
@@ -484,19 +447,17 @@ const extractImageWithVisionAPI = async (file) => {
 
 :deep(.el-textarea__inner) {
   resize: none !important;
-  height: 120px !important;  /* 控制输入框真实高度 */
+  height: 120px !important;
   border-radius: 12px;
   font-size: 15px;
   line-height: 1.5;
 }
 
 
-/* 选中效果 */
 :deep(.el-textarea__inner:focus) {
   border-color: #42b983 !important;
   box-shadow: 0 0 4px #42b98330;
 }
-
 
 
 .button-area {
@@ -507,7 +468,7 @@ const extractImageWithVisionAPI = async (file) => {
   gap: 12px;
 }
 
-/* 联网搜索按钮 */
+
 .upload-button {
   background-color: #FFFFFF;
   color: #E0E0E0;
@@ -526,12 +487,11 @@ const extractImageWithVisionAPI = async (file) => {
 }
 
 
-/* 发送按钮（圆形箭头） */
 .send-button {
   background-color: #FFFFFF;
   color: #E0E0E0;
   padding: 8px 16px !important;
-  font-size: 16px !important;  /* 强制放大图标 */
+  font-size: 16px !important;
   border: 1.5px solid #DCEDC8;
   border-radius: 50px !important;
   cursor: pointer !important;
@@ -545,7 +505,6 @@ const extractImageWithVisionAPI = async (file) => {
 }
 
 
-/* 头部 */
 .drawer-header {
   font-size: 25px;
   background-color: transparent !important;
@@ -559,13 +518,11 @@ const extractImageWithVisionAPI = async (file) => {
 
 .drawer-body {
   padding: 16px;
-  height: calc(100% - 44px); /* 头部高度大约44px，留剩余 */
+  height: calc(100% - 44px);
   overflow: auto;
 }
 
-/* ============================ */
-/* 问答区样式 */
-/* ============================ */
+
 .qa-conversation {
   margin-top: 15px !important;
   height: 72%;
@@ -604,7 +561,6 @@ const extractImageWithVisionAPI = async (file) => {
 }
 
 
-/* 抽屉整体容器 */
 .drawer-container {
   max-width: 100% !important;
   pointer-events: auto;
@@ -616,7 +572,6 @@ const extractImageWithVisionAPI = async (file) => {
 }
 
 
-/* 注意：要写在全局css，或者用 :deep() */
 div[style*="position: fixed; inset: 0px"] {
   pointer-events: none !important;
   background: transparent !important;
@@ -628,7 +583,6 @@ div[style*="position: fixed; inset: 0px"] .drawer-container {
 }
 
 
-/* 把手：放在抽屉左侧，显示两条竖线 */
 .drawer-handle {
   position: absolute;
   top: 0;
@@ -636,31 +590,22 @@ div[style*="position: fixed; inset: 0px"] .drawer-container {
   width: 14px;
   height: 100%;
   cursor: e-resize;
-  background-color: #f0f0f0; /* 或透明 */
+  background-color: #f0f0f0;
   border-right: 1px solid #ddd;
-
-  /* 关键：防止选中文字 */
   user-select: none;
-
-  /* 可选：让鼠标点住后不能双击选中 */
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .handle-icon {
   font-size: 17px;
   color: #BDBDBD;
-
-  /* 同样防止选中文字 */
   user-select: none;
 }
-
 
 </style>
 

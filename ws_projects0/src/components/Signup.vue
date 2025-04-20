@@ -1,7 +1,6 @@
 <template>
   <div class="signup-container">
     <h1>🌱 Sprout</h1>
-<!--    <h2>Create an Account</h2>-->
     <!-- User name input field -->
     <input v-model="username" @input="handleUsernameInput" placeholder="Username" class="input-field" />
     <p v-if="usernameError" class="error-message">{{ usernameError }}</p>
@@ -36,17 +35,17 @@ const generalError = ref('');
 const router = useRouter();
 
 
-let debounceTimer = null; // 用于防抖的计时器
+let debounceTimer = null;
 
-// 处理输入时触发防抖检查
+// Trigger the anti-shake check when processing the input
 const handleUsernameInput = () => {
-  clearTimeout(debounceTimer); // 取消上次的计时器
+  clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     checkUsernameExists();
-  }, 500); // 等待 500ms
+  }, 500);
 };
 
-// 检查用户名是否已存在
+
 const checkUsernameExists = async () => {
 
   try {
@@ -57,7 +56,7 @@ const checkUsernameExists = async () => {
     if (response.data.exists) {
       usernameError.value = "Username is already taken.";
     } else {
-      usernameError.value = ""; // 用户名可用，不显示错误
+      usernameError.value = ""; // The username is available and no error is displayed
     }
   } catch (error) {
     console.error("Error checking username:", error);
@@ -65,7 +64,7 @@ const checkUsernameExists = async () => {
   }
 };
 
-/** 实时检查密码 */
+//Check passwords in real time
 const handlePasswordInput = () => {
   if (password.value.length < 8) {
     passwordError.value = "Password must be at least 8 characters long.";
@@ -73,11 +72,11 @@ const handlePasswordInput = () => {
     passwordError.value = "";
   }
 
-  // 当密码改变时，也要检查确认密码是否匹配
+  // When the password changes, also check and confirm whether the password matches
   handleConfirmPasswordInput();
 };
 
-/** 实时检查确认密码 */
+// Check and confirm passwords in real time
 const handleConfirmPasswordInput = () => {
   if (confirmPassword.value && confirmPassword.value !== password.value) {
     confirmPasswordError.value = "Passwords do not match.";
@@ -86,7 +85,7 @@ const handleConfirmPasswordInput = () => {
   }
 };
 
-/** 处理注册逻辑 */
+
 const signup = async () => {
   if (usernameError.value || passwordError.value || confirmPasswordError.value) {
     generalError.value = "Please fix errors before submitting.";
@@ -116,12 +115,12 @@ body {
 }
 
 .signup-container {
-  max-width: 100%; /* 设置容器最大宽度 */
-  height: 105vh;    /* 设置容器填充屏幕高度 */
+  max-width: 100%;
+  height: 105vh;
   display: flex;
-  flex-direction: column;  /* 竖直排列子元素 */
-  justify-content: center; /* 居中对齐 */
-  align-items: center;     /* 水平居中 */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   padding: 20px;
   background-color: #F9FBF7;
   border-radius: 10px;
@@ -146,7 +145,7 @@ h2 {
 }
 
 .input-field {
-  width: 30%; /* 宽度适应屏幕 */
+  width: 30%;
   padding: 15px;
   margin: 10px 0;
   border: 1px solid #ccc;

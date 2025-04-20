@@ -1,7 +1,7 @@
 <template>
   <div class="schedule-container">
   <div class="calendar-container">
-    <!-- Vue Cal 日历 -->
+    <!-- Vue Cal calendar -->
     <vue-cal
         :events="events"
         :time-from="0 * 60"
@@ -12,12 +12,12 @@
         @event-click="openUpdateModal"
     />
 
-    <!-- 新建日程按钮 -->
+    <!-- New Schedule button -->
     <el-button type="primary" class="add-schedule-btn" @click="showCreateModal = true">
       New Schedule
     </el-button>
 
-    <!-- 调度创建弹窗 -->
+    <!-- Schedule the creation of pop-up Window -->
     <el-dialog v-model="showCreateModal" title="Create Schedule">
       <el-form label-width="120px">
         <el-form-item label="Schedule Title:">
@@ -58,7 +58,7 @@
       </template>
     </el-dialog>
 
-    <!-- 更新日程弹窗 -->
+    <!-- Update the schedule pop-up window -->
     <el-dialog v-model="showUpdateModal" title="Update Schedule">
       <el-form label-width="120px">
         <el-form-item label="Schedule Title:">
@@ -111,21 +111,21 @@ import VueCal from "vue-cal";
 import axios from "axios";
 import {ElMessage, ElNotification} from "element-plus";
 const userId = ref(localStorage.getItem('userId') || '');
-const events = ref([]); // 日历事件
+const events = ref([]); // Calendar events
 
 
-const showScheduleModal = ref(false); // 控制弹窗
+const showScheduleModal = ref(false);
 const showCreateModal = ref(false);
 const showUpdateModal = ref(false);
 const selectedSchedule = ref({});
-let reminderTimers = []; // 存放计时器ID，避免重复
+let reminderTimers = []; // Store the timer ID to avoid repetition
 
 
 const newSchedule = ref({
   title: "",
   startTime: "",
-  duration: 30, // 默认 30 分钟
-  remindBefore: 'none', // 默认不提前提醒
+  duration: 30, // The default is 30 minutes.
+  remindBefore: 'none', // By default, no advance reminder is given
 });
 
 const checkNotificationPermission = async () => {
@@ -133,7 +133,7 @@ const checkNotificationPermission = async () => {
   console.log("🔍 Notification permission:", permission);
 
   if (permission === "granted") {
-    // ✅ Permission already granted, no need to notify user
+    // Permission already granted, no need to notify user
     return;
   } else if (permission === "default") {
     const result = await Notification.requestPermission();
@@ -191,7 +191,7 @@ const fetchSchedules = async () => {
     const data = res.data;
 
     events.value = data.map(sch => {
-      const start = new Date(sch.startTime); // 浏览器自动从 UTC → 本地时间
+      const start = new Date(sch.startTime);
       const end = new Date(start.getTime() + sch.duration * 1000);
 
       // console.log("🔵 Payload:", {
@@ -207,24 +207,23 @@ const fetchSchedules = async () => {
         id: sch.scheduleId,
         start,
         end,
-        title: sch.title,      // 方块内只显示标题
+        title: sch.title,
         duration: sch.duration / 60,
         remindBefore: sch.remindBefore,
         class: 'custom-event'
       };
     });
-    // **在拉取完后，调用 setupReminders**：
     setupReminders();
   } catch (err) {
     console.error("Failed to fetch schedules:", err);
   }
 };
 
-// 组件挂载时加载日程
+
 onMounted(() => {
   console.log('permission:', Notification.permission);
 
-  checkNotificationPermission(); // 🟢 自动检测权限并请求
+  checkNotificationPermission(); // Automatically detect permissions and make requests
 
   fetchSchedules();
 });
@@ -233,7 +232,7 @@ onMounted(() => {
 const createScheduleEvent = async () => {
   const { title, startTime, duration, remindBefore } = newSchedule.value;
 
-  // 前置校验
+
   if (!title || !startTime || duration === null || remindBefore === undefined) {
     ElMessage.error("Please complete all required fields.");
     return;
@@ -265,7 +264,6 @@ const createScheduleEvent = async () => {
 };
 
 
-// 打开更新弹窗
 const openUpdateModal = (event) => {
   selectedSchedule.value = {
     scheduleId: event.id,
@@ -278,11 +276,9 @@ const openUpdateModal = (event) => {
 };
 
 
-// 更新日程
 const updateScheduleEvent = async () => {
   const { scheduleId, title, startTime, duration, remindBefore } = selectedSchedule.value;
 
-  // 前置校验
   if (!scheduleId || !title || !startTime || duration === null || remindBefore === undefined) {
     ElMessage.error("Please complete all required fields.");
     return;
@@ -331,8 +327,8 @@ const deleteScheduleEvent = async () => {
   try {
     await axios.delete(`http://localhost:8080/schedule/deleteReminder/${scheduleId}`);
     ElMessage.success("Schedule deleted successfully!");
-    fetchSchedules(); // 更新日程列表
-    showUpdateModal.value = false; // 关闭弹窗
+    fetchSchedules();
+    showUpdateModal.value = false;
   } catch (error) {
     console.error("Failed to delete schedule:", error);
     ElMessage.error("Failed to delete schedule.");
@@ -340,10 +336,9 @@ const deleteScheduleEvent = async () => {
 };
 
 
-// 关闭弹窗
+
 const closeModal = () => {
   showScheduleModal.value = false;
-  // 手动重置字段，确保响应式追踪
   newSchedule.value.title = "";
   newSchedule.value.startTime = "";
   newSchedule.value.duration = 30;
@@ -351,10 +346,7 @@ const closeModal = () => {
   newSchedule.value = { title: "", startTime: "", duration: 30, remindBefore: 'none' };
 };
 
-
 </script>
-
-
 
 
 <style scoped>
@@ -362,54 +354,41 @@ const closeModal = () => {
   background-color: #F9FBF7;
   width: 100%;
   height: 95vh;
-
 }
 
-/* 日历容器 */
+
 .calendar-container {
   max-width: 1500px;
   margin: 30px auto;
   position: relative;
-
-  /* 加圆角、边框、阴影 */
   border-radius: 10px;
-  border: 1.5px solid #C5E1A5;           /* 绿色系边框 */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);  /* 柔和阴影 */
-  overflow: hidden; /* 防止圆角被内容撑开 */
+  border: 1.5px solid #C5E1A5;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
+  overflow: hidden;
   background-color: #fff;
 }
 
 
-/* 添加日程按钮 */
 .add-schedule-btn {
   position: absolute;
   top: 12px;
   right: 20px;
   z-index: 1000;
-
-  /* 背景颜色 & 字体颜色 */
-  background-color: #C5E1A5;  /* 绿色背景 */
-  color: #FFFFFF;                /* 白色文字 */
-
-  /* 字体样式 */
+  background-color: #C5E1A5;
+  color: #FFFFFF;
   font-size: 16px;
   font-weight: 600;
-
-  /* 按钮样式 */
   padding: 10px 16px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-
-  /* ✅ 阴影 */
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
   transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-/* ✅ 悬浮效果 */
+
 .add-schedule-btn:hover {
   background-color: #AED581;
-
 }
 
 
@@ -432,9 +411,9 @@ const closeModal = () => {
   order: 4;
 }
 
-/* 顶部视图按钮容器区域 */
+/* Top view button container area */
 :deep(.vuecal__flex.vuecal__menu) {
-  background-color: #F1F8E9 !important; /* 淡绿背景 */
+  background-color: #F1F8E9 !important;
   padding: 3px 0;
   display: flex;
   justify-content: center;
@@ -442,7 +421,7 @@ const closeModal = () => {
 }
 
 
-/* 每个视图按钮的基础样式 */
+/* The basic style of each view button */
 :deep(.vuecal__view-btn) {
   background: transparent !important;
   border: none !important;
@@ -454,20 +433,19 @@ const closeModal = () => {
   border-bottom: 2px solid transparent !important;
 }
 
-/* 悬浮效果 */
+
 :deep(.vuecal__view-btn:hover) {
   background-color: #DCEDC8 !important;
-  border-radius: 6px; /* 让悬浮有一点圆角 */
+  border-radius: 6px;
   cursor: pointer;
 }
 
 
-/* 点击效果 */
 :deep(.vuecal__view-btn:active) {
   background-color: #C5E1A5 !important;
 }
 
-/* 当前激活的视图按钮 */
+
 :deep(.vuecal__view-btn.vuecal__view-btn--active) {
   border-bottom: 4px solid #C5E1A5 !important;
   background-color: transparent !important;
@@ -502,8 +480,7 @@ const closeModal = () => {
 }
 
 
-
-/* 星期标题背景 & 字体颜色 */
+/* Title background & font color of the Week */
 :deep(.vuecal__weekdays-headings) {
   background-color: rgb(241, 248, 233, 0.5) !important;
   color: #4E6B50 !important;
@@ -515,47 +492,39 @@ const closeModal = () => {
 }
 
 
-/* 左侧时间轴 */
+/* The left timeline */
 :deep(.vuecal__time-column) {
   background-color: #FFFFFF !important;
   color: #333 !important;
 }
 
 
-/* 选中的日期 cell 背景（例如点击时） */
+/* The selected date cell background */
 :deep(.vuecal__cell--selected) {
-  background-color: rgb(224, 247, 250, 0.5) !important; /* 更淡的绿色 */
+  background-color: rgb(224, 247, 250, 0.5) !important;
   border-radius: 4px;
 }
 
-/* 今天的日期 cell 背景 */
+/* Today's date cell background */
 :deep(.vuecal__cell--today) {
-  background-color: rgba(232, 234, 246, 0.5) !important; /* 柔和蓝紫 */
+  background-color: rgba(232, 234, 246, 0.5) !important;
   border-radius: 4px;
 }
 
 
 :deep(.vuecal__now-line) {
   position: absolute !important;
-  top: 50%; /* 后续改为计算后的实际位置 */
+  top: 50%;
   left: 0;
   right: 0;
   height: 2px !important;
   z-index: 10;
-  background: repeating-linear-gradient(
-      to right,
-      #388E3C,
-      #388E3C 4px,
-      transparent 4px,
-      transparent 8px
-  ) !important;
-
-  background-color: transparent !important;
+  background: transparent repeating-linear-gradient(to right, #388E3C, #388E3C 4px, transparent 4px, transparent 8px) !important;
   border: none !important;
   border-top: none !important;
 }
 
-/* 小圆点 */
+/*Small dot */
 :deep(.vuecal__now-line)::before {
   content: '';
   position: absolute;
@@ -572,13 +541,11 @@ const closeModal = () => {
 }
 
 
-
 :deep(.vuecal__event-time) {
   display: none !important;
 }
 
 
-/* 鼠标悬停时变手型 */
 :deep(.vuecal__event) {
   cursor: pointer;
 }
@@ -586,7 +553,7 @@ const closeModal = () => {
 :deep(.el-form-item) {
   display: flex;
   align-items: center;
-  gap: 15px; /* 控制间距 */
+  gap: 15px;
 }
 
 :deep(.el-input),
@@ -598,7 +565,7 @@ const closeModal = () => {
 
 
 :deep(.vuecal__event.custom-event) {
-  background-color: #F1F8E9 !important; /* 清新绿 */
+  background-color: #F1F8E9 !important;
   color: #4E6B50;
   border: 1.5px solid #C5E1A5;
   border-radius: 5px;
@@ -609,11 +576,9 @@ const closeModal = () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
-  /* 添加居中样式 */
   display: flex;
-  align-items: center;     /* 垂直居中 */
-  justify-content: center; /* 水平居中 */
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
@@ -624,24 +589,23 @@ const closeModal = () => {
 }
 
 
-/* 弹窗整体样式 */
 :deep(.el-dialog) {
   border-radius: 8px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-  background-color: #F9FBF7; /* 柔和奶油绿背景 */
+  background-color: #F9FBF7;
   color: #333;
   font-family: 'Segoe UI', sans-serif;
   top: 60px;
 }
 
-/* 标题字体 */
+
 :deep(.el-dialog__title) {
   font-size: 22px;
   font-weight: 600;
   color: #2E7D32;
 }
 
-/* 关闭按钮 */
+
 :deep(.el-dialog__headerbtn .el-dialog__close) {
   color: #aaa;
   font-size: 18px;
@@ -651,14 +615,14 @@ const closeModal = () => {
 }
 
 
-/* 表单标签 */
+
 :deep(.el-form-item__label) {
   font-size: 15px;
   font-weight: 500;
   color: #4E6B50;
 }
 
-/* 输入框、选择框、日期等 */
+
 :deep(.el-input__inner),
 :deep(.el-date-editor),
 :deep(.el-select),
@@ -668,7 +632,7 @@ const closeModal = () => {
   font-size: 14px;
 }
 
-/* 保存按钮 */
+
 :deep(.el-button--primary) {
   background-color: #C5E1A5;
   border: none;
@@ -683,7 +647,7 @@ const closeModal = () => {
 }
 
 :deep(.el-button--danger) {
-  background-color: #FFAB91; /* 淡粉色 */
+  background-color: #FFAB91;
   border: none;
   color: white;
   font-weight: 600;
@@ -692,12 +656,11 @@ const closeModal = () => {
 }
 
 :deep(.el-button--danger:hover) {
-  background-color: #FF8A65; /* 深一点的粉色 */
+  background-color: #FF8A65;
   border: none;
 }
 
 
-/* 弹窗底部 */
 :deep(.el-dialog__footer) {
   padding-top: 10px;
 }

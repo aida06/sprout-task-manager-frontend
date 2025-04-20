@@ -41,11 +41,11 @@
 
       <p><strong>How can I use the AI Chatbot?</strong><br />
         The AI Chatbot can assist you in several ways:
-        <ul>
+        <ul2>
           <li>Schedule Guidance: Get suggestions on how to plan your tasks, like “What’s the best time for focused work?”</li>
           <li>Data Analysis: Review your productivity and task completion through uploading generated reports.</li>
           <li>General Questions: Ask general queries such as “What’s the weather today?” or “Give me a motivational quote.”</li>
-        </ul>
+        </ul2>
       </p>
 
       <p><strong>How do I get help if I need it?</strong><br />
@@ -163,11 +163,11 @@ button:hover {
 }
 
 
-ul {
+ul2 {
   padding-left: 20px; /* Add space to align the list items nicely */
 }
 
-ul li {
+ul2 li {
   margin-bottom: 10px; /* Space between the list items */
 }
 

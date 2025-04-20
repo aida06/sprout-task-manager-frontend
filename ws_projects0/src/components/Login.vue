@@ -1,7 +1,6 @@
 <template>
   <div class="login-container">
     <h1>🌱 Sprout</h1>
-<!--    <h2>Log In</h2>-->
     <input v-model="username" placeholder="Username" class="input-field" />
     <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Password" class="input-field" />
     <button @click="login" class="login-btn">Login</button>
@@ -58,12 +57,12 @@ body {
 }
 
 .login-container {
-  max-width: 100%; /* 设置容器最大宽度 */
-  height: 105vh;    /* 设置容器填充屏幕高度 */
+  max-width: 100%;
+  height: 105vh;
   display: flex;
-  flex-direction: column;  /* 竖直排列子元素 */
-  justify-content: center; /* 居中对齐 */
-  align-items: center;     /* 水平居中 */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   padding: 20px;
   background-color: #F9FBF7;
   border-radius: 10px;
@@ -88,7 +87,7 @@ h2 {
 }
 
 .input-field {
-  width: 30%; /* 宽度适应屏幕 */
+  width: 30%;
   padding: 15px;
   margin: 10px 0;
   border: 1px solid #ccc;

@@ -57,9 +57,7 @@
         @click="toggleAiDrawer"
     >
       <div class="bubble-icon">
-        <!-- 图标 -->
         <span class="icon-emoji">🤖</span>
-        <!-- 文字 -->
         <span class="icon-text">AI Chatbot</span>
       </div>
     </div>
@@ -136,7 +134,7 @@ onMounted(fetchUserCoins);
 // AI Helper related section
 // ===========================
 const showAiDrawer = ref(false)
-const drawerWidth = ref(400) // 默认宽度
+const drawerWidth = ref(400)
 
 function toggleAiDrawer() {
   showAiDrawer.value = !showAiDrawer.value
@@ -171,7 +169,7 @@ const bubbleStyle = computed(() => {
 .bubble-wrapper {
   position: fixed;
   bottom: 240px;
-  width: 170px;             /* 默认宽度只够图标 */
+  width: 170px;
   height: 50px;
   border-radius: 50px;
   background-color: #DCEDC8;
@@ -183,49 +181,46 @@ const bubbleStyle = computed(() => {
   align-items: center;
   justify-content: flex-start;
   user-select: none;
-  overflow: hidden;        /* 隐藏超出的文字部分 */
+  overflow: hidden;
   pointer-events: auto;
-  padding: 0px 20px;          /* 给图标一点左右内边距 */
+  padding: 0px 20px;
 }
 
-/* 图标 + 文字容器 */
+
 .bubble-icon {
   display: flex;
   align-items: center;
 }
 
-/* 图标的样式（单独调大小） */
+/* The style of the icon (resized separately) */
 .icon-emoji {
-  font-size: 28px;  /* 图标更大 */
+  font-size: 28px;
   margin-right: 6px;
 }
 
-/* 文字的样式（默认隐藏） */
+/* Text style (hidden by default) */
 .icon-text {
   font-size: 20px;
   font-weight: 600;
   color: #4E6B50;
-  display: none;   /* 默认不显示 */
-  white-space: nowrap; /* 防止自动换行 */
+  display: none;
+  white-space: nowrap; /* Prevent automatic line breaks */
 }
 
-/* ============================= */
-/* 当抽屉关闭且鼠标悬停时，展开按钮宽度并显示文字 */
-/* ============================= */
 
+/* When the drawer is closed and the mouse hovers, expand the button width and display the text */
 .bubble-wrapper:not(.drawer-open):hover {
   background-color: rgb(197, 225, 165, 0.7);
   right: -36px !important;
 }
 
-/* 悬浮时显示文字 */
+/* Display text when suspended */
 .bubble-wrapper:not(.drawer-open):hover .icon-text {
   display: inline-block;
 }
 
-/* ============================= */
-/* 如果抽屉打开时，一直显示文字 */
-/* ============================= */
+
+/* If the drawer keeps showing text when it is opened */
 .bubble-wrapper.drawer-open:hover {
   background-color: rgb(197, 225, 165, 0.7);
 
@@ -236,62 +231,57 @@ const bubbleStyle = computed(() => {
 .navbar {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* 关键 */
+  justify-content: space-between;
   width: 100%;
-  /* 线性渐变，方向从上到下 */
   background: linear-gradient(to bottom, #E8F5E9, #E0F2F1);
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 30px 20px;
 }
 
-/* 让导航里所有 a 都去掉下划线，并指定文字颜色 */
+
 .navbar a {
-  text-decoration: none;     /* 去掉下划线 */
+  text-decoration: none;     /* Remove the underline*/
   color: #26A69A;
   font-weight: bold;
   font-size: 17px;
 }
 
-/* 悬停时也不要下划线 */
 .navbar a:hover {
   text-decoration: none;
 }
 
-/* 选中的菜单项颜色 */
 .navbar :deep(.el-menu-item.is-active) {
-  border-bottom: 4px solid #80CBC4 !important; /* 蓝色指示线 */
+  border-bottom: 4px solid #80CBC4 !important;
 }
 
-/* 鼠标悬浮时的颜色 */
 .navbar :deep(.el-menu-item:hover) {
   background-color: #B2DFDB !important;
   border-radius: 8px;
-  transition: all 0.4s ease-in-out; /* 平滑过渡 */
+  transition: all 0.4s ease-in-out;
 }
 
-/* 鼠标点击时的颜色 */
 .navbar :deep(.el-menu-item:active) {
-  background-color: #80CBC4 !important; /* 更深一点的绿色 */
+  background-color: #80CBC4 !important;
 }
 
 
-/* 左侧容器：让链接水平排列并减少间距 */
+/* Left container: Arrange the links horizontally and reduce the spacing */
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 15px; /* 调整链接之间的间距，越小越紧凑 */
+  gap: 15px;
 
 }
 
-/* 右侧容器：让金币和头像对齐 */
+/* Right container: Align the gold coins with the avatars */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 40px;
 }
 
-/* 覆盖 el-menu-item 的默认 padding，让链接更紧凑 */
+
 :deep(.el-menu-item) {
   padding: 0 4px !important;
 }
@@ -323,7 +313,7 @@ const bubbleStyle = computed(() => {
 /* General App Styles */
 #app {
   font-family: 'Segoe UI', sans-serif;
-  background:  #F9FBF7 !important; /* 确保背景透明 */
+  background:  #F9FBF7 !important;
   margin: 0;
   height: 99vh;
   padding: 0px;

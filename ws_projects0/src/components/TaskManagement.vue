@@ -20,19 +20,17 @@
       <!-- Tag Selection & Panel -->
       <h2>Tags:</h2>
       <div class="tag-selector">
-        <!-- 根据是否有 newTask.taskTag 显示不同的文字 -->
         <button @click="toggleTagPanel" class="tag-btn">
           {{ newTask.taskTag ? newTask.taskTag : "Add a tag..." }}
           <span v-if="showTagPanel">▲</span>
           <span v-else>▼</span>
         </button>
 
-        <!-- 面板展开 -->
+        <!-- Panel unfolding -->
         <div v-if="showTagPanel" class="tag-panel">
           <div class="tag-grid">
             <div v-for="tag in tags" :key="tag" class="tag-item" @click="selectTag(tag)">
               <span :class="{ selected: newTask.taskTag === tag }">{{ tag }}</span>
-              <!-- 阻止“⚙”冒泡，以免触发 selectTag -->
               <button class="edit-tag" @click.stop="toggleTagOptions(tag)">...</button>
 
               <div v-if="tagOptions === tag" class="tag-options">
@@ -42,13 +40,11 @@
             </div>
           </div>
 
-          <!-- 新建 Tag 的输入框也放在面板里 -->
           <el-input v-model="newTag" placeholder="+ Enter new tag" @keyup.enter="addTag" />
         </div>
       </div>
 
       <!-- New Tag Input -->
-
       <el-input
           v-model="newTask.description"
           type="textarea"
@@ -59,7 +55,7 @@
       <el-button @click="createTask" class="custom-btn">Create Task</el-button>
     </div>
 
-    <!-- 中间 -->
+    <!-- In the middle -->
     <div class="task-start">
       <h1>Select Task</h1>
       <h2>Choose Tag:</h2>
@@ -67,24 +63,22 @@
         <el-option v-for="tag in tags" :key="tag" :label="tag" :value="tag" />
       </el-select>
 
-
-      <!-- 任务列表 -->
+      <!-- Task list -->
       <div class="task-list-container">
         <div v-for="task in filteredTasks" :key="task.taskId" class="task-item" :class="{ 'selected-task': selectedTask && selectedTask.taskId === task.taskId }" @click="selectTask(task)">
           <span>{{ task.taskName }} </span>
           <el-button class="task-options-btn" @click.stop="openTaskPanel(task)" type="text">...</el-button>
         </div>
       </div>
-      <!-- 任务编辑小面板（悬浮居中） -->
+      <!-- Task Editing Panel  -->
       <div v-if="selectedTaskForEdit" class="modal-overlay">
         <div class="task-panel">
-          <!-- 右上角取消按钮 -->
           <button class="close-btn" @click="closeTaskPanel">✖</button>
           <h3>Edit Task</h3>
           <h2>Task Name:</h2>
           <el-input v-model="selectedTaskForEdit.taskName" placeholder="Task Name" />
 
-          <!-- Importance & Urgency 并排 -->
+          <!-- Importance & Urgency -->
           <div class="importance-urgency">
             <div class="importance">
               <h2>Importance:</h2>
@@ -101,7 +95,7 @@
 
           <h4>Reward Points: <strong>{{ calculateReward(selectedTaskForEdit) }}</strong></h4>
 
-          <!-- Save & Delete 按钮 -->
+          <!-- Save & Delete  -->
           <div class="task-panel-actions">
             <el-button  @click="deleteTask(selectedTaskForEdit)" type="danger">Delete</el-button>
             <el-button  @click="saveTaskChanges" type="primary">Update</el-button>
@@ -118,10 +112,7 @@
           <button class="close-btn" @click="closeTimerPanel">✖</button>
           <h3>Set Focus Timer ⏳ </h3>
           <h4>Duration: {{ timerSettings.duration }} minutes</h4>
-          <!-- 滑动条 -->
           <el-slider v-model="timerSettings.duration" :min="1" :max="180" step="1" />
-          <!-- Start 按钮 -->
-
           <el-button @click="startFocusTimer" class="custom-btn">Start</el-button>
         </div>
       </div>
@@ -133,9 +124,7 @@
       <ul>
         <li v-for="task in completedTasks" :key="task.taskId">
           <input type="checkbox" checked disabled />
-<!--          <el-checkbox v-model="task.completed" :disabled="true" label="task.taskName" checked>-->
           {{ task.taskName }}
-<!--          </el-checkbox>-->
         </li>
       </ul>
     </div>
@@ -161,7 +150,7 @@ const { selectedTask } = storeToRefs(taskStore);
 const { completedTasks } = storeToRefs(taskStore);
 
 
-// 标签（Tag）
+// Tags
 const tags = ref(["Default", "Study", "Work", "Health", "Finance"]);
 console.log("Initial tags:", tags.value);
 // Task list
@@ -169,7 +158,7 @@ const tasks = ref([]);
 
 
 const fetchUserCoins = async () => {
-  if (!userId.value) return; // **如果 userId 为空，避免请求**
+  if (!userId.value) return;
 
   try {
     const response = await axios.get("http://localhost:8080/user/coins", {
@@ -199,7 +188,7 @@ onMounted(() => {
 });
 
 
-// 新建任务输入
+
 const newTask = ref({
   taskName: "",
   importance: 0,
@@ -208,24 +197,21 @@ const newTask = ref({
   description: "",
 });
 
-// 新建标签输入
 const newTag = ref("");
 
-// 用于控制 Tag 选择面板和编辑弹窗
 const showTagPanel = ref(false);
 
-const tagOptions = ref(null); // 表示当前正在显示 “Edit/Delete” 选项的 Tag
+// The Tag indicating that the "Edit/Delete" option
+const tagOptions = ref(null);
 
-// 选择的 Tag（用于筛选任务）
 const selectedTag = ref("Default");
-
 
 const selectedTaskForEdit = ref(null);
 
 
-/** -----------------------------
- *  左边
- *  ----------------------------- */
+/** ---------------
+ *    Left Side
+ *  ---------------- */
 const validateInput = (field) => {
   if (newTask.value && newTask.value[field] !== undefined) {
     newTask.value[field] = Math.min(10, Math.max(0, Math.round(newTask.value[field])));
@@ -235,13 +221,12 @@ const validateInput = (field) => {
   }
 };
 
-// 筛选出当前选中 Tag 下的任务列表
+// Filter out the task list under the currently selected Tag
 const filteredTasks = computed(() => {
   return tasks.value.filter((task) => task.taskTag === selectedTag.value);
 });
 
 
-// 切换 Tag 面板显示/隐藏
 const toggleTagPanel = () => {
   console.log("Current tags:", tags.value);
   console.log("Current newTask.taskTag:", newTask.value.taskTag);
@@ -249,19 +234,18 @@ const toggleTagPanel = () => {
   tagOptions.value = null; // 关闭二级编辑选项
 };
 
-// 选择 Tag
 const selectTag = (tag) => {
   newTask.value.taskTag = tag
   // 选完就关闭面板
   showTagPanel.value = false
 }
 
-// 切换某个 Tag 的「重命名 / 删除」操作选项
+// Switch the "Rename/Delete" operation option of a certain Tag
 const toggleTagOptions = (tag) => {
   tagOptions.value = tagOptions.value === tag ? null : tag;
 };
 
-// 添加新标签
+
 const addTag = () => {
   if (newTag.value && !tags.value.includes(newTag.value)) {
     tags.value.push(newTag.value);
@@ -269,32 +253,30 @@ const addTag = () => {
   }
 };
 
-// 重命名 Tag
+
 const renameTag = async (oldTag) => {
   const newName = prompt(`Rename tag "${oldTag}":`, oldTag);
   if (!newName || newName === oldTag || tags.value.includes(newName)) return;
 
   try {
-    // 调用后端 API
     const response = await axios.put("http://localhost:8080/task/tag/rename", null, {
       params: {
         oldTag: oldTag,
         newTag: newName,
-        userId: userId.value,  // 确保传入 userId
+        userId: userId.value,
       },
     });
-
     console.log("Rename tag response:", response.data);
 
-    // 1. **前端更新 `tags`**
+    // Update 'tags' on the front end
     tags.value = tags.value.map((tag) => (tag === oldTag ? newName : tag));
 
-    // 2. **如果当前 `newTask.taskTag` 是旧的 tag，更新**
+    // If the current 'newTask.taskTag' is an old tag, update it
     if (newTask.value.taskTag === oldTag) {
       newTask.value.taskTag = newName;
     }
 
-    // 3. **如果 `selectedTag` 是旧的 tag，也更新**
+    // If 'selectedTag' is an old tag, update it as well
     if (selectedTag.value === oldTag) {
       selectedTag.value = newName;
     }
@@ -318,10 +300,10 @@ const removeTag = async (taskTag) => {
 
     console.log("Delete tag response:", response.data);
 
-    // 1️. **前端同步删除 tags 中的对应项**
+    // The corresponding items in the tags are synchronously deleted at the front end
     tags.value = tags.value.filter(tag => tag !== taskTag);
 
-    // 2️. **如果删除的 tag 是当前选中的，切换到第一个 tag**
+    // If the deleted tag is the currently selected one, switch to the first tag
     if (newTask.value.taskTag === taskTag) {
       newTask.value.taskTag = tags.value.length > 0 ? tags.value[0] : "";
     }
@@ -330,7 +312,7 @@ const removeTag = async (taskTag) => {
       selectedTag.value = tags.value.length > 0 ? tags.value[0] : "";
     }
 
-    tagOptions.value = null;  // 关闭弹出菜单
+    tagOptions.value = null;  // Close the pop-up menu
   } catch (err) {
     console.error("Failed to delete tag:", err);
     ElMessage.error("Failed to delete the tag, please check the console.");
@@ -357,10 +339,10 @@ const createTask = async () => {
     await axios.post("http://localhost:8080/task", payload);
     console.log("Task created successfully");
 
-    // **任务创建后重新加载任务列表**
+    // Reload the task list after the task is created
     await loadTasks();
 
-    // 清空输入框
+    // Empty the input box
     newTask.value = {
       taskName: "",
       importance: 0,
@@ -377,9 +359,9 @@ const createTask = async () => {
 
 
 /** -----------------------------
- *  中间
+ *  Middle
  *  ----------------------------- */
-// 选择任务
+
 const selectTask = (task) => {
   selectedTask.value = selectedTask.value?.taskId === task.taskId ? null : { ...task };
 };
@@ -410,17 +392,17 @@ const calculateReward = (task) => {
   return parseFloat((0.6 * task.importance + 0.4 * task.urgency + 5).toFixed(2));
 };
 
-// 打开任务编辑面板
+
 const openTaskPanel = (task) => {
   selectedTaskForEdit.value = { ...task };
 };
 
-// 关闭任务编辑面板
+
 const closeTaskPanel = () => {
   selectedTaskForEdit.value = null;
 };
 
-// 保存修改的任务
+
 const saveTaskChanges = async () => {
   if (!selectedTaskForEdit.value) return;
 
@@ -485,16 +467,14 @@ const deleteTask = async (task) => {
   }
 };
 
-// 番茄钟设定状态
+// Tomato clock setting status
 const showTimerPanel = ref(false);
 const timerSettings = ref({ duration: 30 });
 
-// 打开番茄钟设定面板
 const openTimerPanel = () => {
   showTimerPanel.value = true;
 };
 
-// 关闭番茄钟设定面板
 const closeTimerPanel = () => {
   showTimerPanel.value = false;
 };
@@ -508,14 +488,12 @@ const startFocusTimer = () => {
 };
 
 /** -----------------------------
- *  右边
+ *  Right Side
  *  ----------------------------- */
-// 获取当天完成的任务
 const fetchTodayCompletedTasks = async () => {
   try {
-    // 请求后端获取今天完成的任务
     const response = await axios.get(`http://localhost:8080/focusTimer/users/${userId.value}/todayCompletedTasks`);
-    // 将返回的数据赋值给 completedTasks
+    // Assign the returned data to completedTasks
     completedTasks.value = response.data.map(taskName => ({ taskName }));
     console.log("Fetched TodayCompletedTasks:", completedTasks.value );
   } catch (error) {
@@ -529,9 +507,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* -----------------------------
-   大容器布局
-   ----------------------------- */
+
 .task-management-container {
   background-color: #F9FBF7;
   width: 99%;
@@ -545,7 +521,7 @@ onMounted(() => {
 }
 
 /* -----------------------------
-   左侧：创建任务区域
+   Left: Create the task area
    ----------------------------- */
 .task-create {
   margin-top: 15px;
@@ -607,7 +583,7 @@ textarea {
   background-color: #AED581 ;
 }
 
-/* Tag 选择 & 面板 */
+
 .tag-selector {
   color: #4e6b50;
   position: relative;
@@ -618,9 +594,9 @@ textarea {
 }
 
 .tag-btn {
-  display: flex;                /* 让内部子元素可分左右 */
-  justify-content: space-between; /* 左右两端对齐 */
-  align-items: center;          /* 垂直方向居中 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
   padding: 8px;
   background: white;
@@ -642,7 +618,7 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
-  z-index: 999; /* 让面板浮在上方 */
+  z-index: 999; /* Let the panel float above */
 }
 
 .tag-grid {
@@ -708,7 +684,7 @@ textarea {
 }
 
 /* -----------------------------
-   中间：选择任务
+   Middle: Select the task
    ----------------------------- */
 .task-start {
   margin-top: 15px;
@@ -733,7 +709,7 @@ textarea {
   border: 1.5px solid #E0E2E9;
 }
 
-/* 让任务项右侧的 `...` 按钮对齐 */
+
 .task-item {
   display: flex;
   justify-content: space-between;
@@ -749,7 +725,7 @@ textarea {
   cursor: pointer;
 }
 
-/* 选中的任务项样式 */
+
 .selected-task {
   background-color: rgb(236, 239, 241, 0.8);
   border-radius: 5px;
@@ -771,7 +747,7 @@ textarea {
   color: #4e6b50 !important;
 }
 
-/* 任务编辑面板 - 居中悬浮 */
+/* Task Editing Panel - Centered and suspended */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -794,7 +770,7 @@ textarea {
   position: relative;
 }
 
-/* 右上角 X 关闭按钮 */
+
 .close-btn {
   position: absolute;
   top: 10px;
@@ -813,7 +789,7 @@ textarea {
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-/* 悬浮时，X 变灰色，增强交互感 */
+
 .close-btn:hover {
   background: rgba(0, 0, 0, 0);
   color: #4e6b50;
@@ -840,7 +816,7 @@ textarea {
 }
 
 :deep(.el-button--danger) {
-  background-color: #FFAB91; /* 淡粉色 */
+  background-color: #FFAB91;
   border: none;
   color: white;
   font-weight: 600;
@@ -849,22 +825,23 @@ textarea {
 }
 
 :deep(.el-button--danger:hover) {
-  background-color: #FF8A65; /* 深一点的粉色 */
+  background-color: #FF8A65;
   border: none;
 }
 
-/* 修改滑块的颜色为绿色 */
+
 ::v-deep .el-slider__button {
   background-color: white; /* 更深绿色 */
   border-color: #A5D6A7;
 }
 
-/* 修改滑动条轨道的边框颜色 */
+
 ::v-deep .el-slider__bar {
   background-color: #A5D6A7;
 }
+
 /* -----------------------------
-   右侧：已完成任务
+   Right side: Completed task
    ----------------------------- */
 .task-list {
   margin-top: 15px;
@@ -891,7 +868,7 @@ textarea {
   align-items: center;
   gap: 15px;
   padding: 10px 0;
-  border-bottom: 1px solid #E0E2E9; /* 添加分割线 */
+  border-bottom: 1px solid #E0E2E9; /* Add a dividing line */
 }
 
 /* 让复选框更小巧 */
@@ -902,15 +879,14 @@ textarea {
 
 
 /* -----------------------------
-   通用
+   General
    ----------------------------- */
-
 button:disabled {
   background-color: #ECEFF1;
   cursor: not-allowed;
 }
 
-/* 其它示例文字样式 */
+
 h1 {
   text-align: center;
   color: #4E6B50;
@@ -933,9 +909,9 @@ h2 {
   font-size: 16px;
 }
 
-
 p {
   color: #666;
   font-size: 1.2rem;
 }
+
 </style>

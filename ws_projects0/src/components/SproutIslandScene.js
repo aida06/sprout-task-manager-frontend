@@ -6,13 +6,13 @@ export default class SproutIslandScene extends Phaser.Scene {
     constructor({userId, userCoins}) {
         super({ key: 'SceneKey' });
 
-        // 这里保存“ref 对象”，不要取 .value
+        // save the "ref object", and do not take the.value
         this.userIdRef = userId
         this.userCoinsRef = userCoins
 
-        this.storeItems = [];    // 从后端获取的物品数据
-        this.typeButtons = [];   // 标签按钮数组
-        this.itemElements = [];  // 存放当前显示的物品相关对象（背景、文字、sprite等）
+        this.storeItems = [];    // Item data obtained from the back end
+        this.typeButtons = [];   // Array of label buttons
+        this.itemElements = [];  // Store the objects related to the currently displayed items
 
         this.spriteMap = {};
         this.frameIndexMap = {};
@@ -21,12 +21,11 @@ export default class SproutIslandScene extends Phaser.Scene {
 
         console.log("SproutIslandScene.js initialized with userCoins:", this.userCoinsRef.value);
 
-        // 创建一个控制器，并把自己传进去
         this.sceneController = new SproutIslandController(this);
     }
 
     preload() {
-        // 加载 Tiled Tileset 图片
+        // Load the Tiled Tileset image
         this.load.image('water_tileset', '/src/assets/tilesets/Water.png');
         this.load.image('grass_tileset', '/src/assets/tilesets/Grass_tiles_v2.png');
 
@@ -39,10 +38,10 @@ export default class SproutIslandScene extends Phaser.Scene {
         this.load.image('plantField_tileset', '/src/assets/tilesets/Tilled_Dirt_Wide_v2.png');
 
 
-        // 加载 Tiled JSON 地图
+        // Load the Tiled JSON map
         this.load.tilemapTiledJSON('backgroundMap', '/src/assets/maps/background3.tmj');
 
-        // 加载UI
+        // Load UI
         this.load.spritesheet('buttons', '/src/assets/UI/SquareButtons26x19.png', {
             frameWidth: 48,   // 计算得出，每个按钮宽 32px
             frameHeight: 32    // 每个按钮高 32px
@@ -53,14 +52,14 @@ export default class SproutIslandScene extends Phaser.Scene {
             frameHeight: 144    // 每个按钮高 32px
         });
 
-        // 加载Sprite
+        // Load Sprite
         this.load.spritesheet('boat', '/src/assets/sprites/Boats.png', {
             frameWidth: 48,
             frameHeight: 32
         });
 
 
-        // 加载StoreItem
+        // Load Store Item
         this.load.spritesheet('trees', '/src/assets/sprites/Trees.png', {
             frameWidth: 32,
             frameHeight: 32
@@ -343,7 +342,7 @@ export default class SproutIslandScene extends Phaser.Scene {
         this.createSprite();
         this.createStoreUI();
 
-        // 串行加载
+        // Serial loading
         await this.loadStoreData();
         await this.loadItemSpriteMap();
         await this.loadFrameIndexMap();
@@ -351,7 +350,7 @@ export default class SproutIslandScene extends Phaser.Scene {
 
         await this.loadUserBelongings();
 
-        // 全局监听 pointermove: 让 ghostSprite 跟随鼠标
+        // Global monitoring pointermove: Let ghostSprite follow the mouse
         this.input.on('pointermove', (pointer) => {
             // console.log('pointer move:', pointer.x, pointer.y);
             // console.log(this.ghostSprite)
@@ -362,16 +361,16 @@ export default class SproutIslandScene extends Phaser.Scene {
             }
         });
 
-        this.input.mouse.disableContextMenu();  // 禁用右键菜单
+        this.input.mouse.disableContextMenu();  // Disable the right-click menu
 
     }
 
 
     createMap() {
-        // 读取 Tiled JSON 地图
+        // Read the Tiled JSON map
         this.map = this.make.tilemap({ key: 'backgroundMap' });
 
-        // 绑定 Tileset（名称要和 `tmj` 里的 Tileset 名称一致）
+        // Bind the Tileset (the name should be consistent with the Tileset name in 'tmj')
         const waterTileset = this.map.addTilesetImage('Water', 'water_tileset');
         const grassTileset = this.map.addTilesetImage('GrassV2', 'grass_tileset');
 
@@ -384,24 +383,23 @@ export default class SproutIslandScene extends Phaser.Scene {
         const plantFieldTileset = this.map.addTilesetImage('TilledDirtV2', 'plantField_tileset');
 
 
-        // 如果 houseFloor 里用了多个 Tileset（例如 HouseWall 和 HouseRoof），传入数组
-        const houseTilesets = [houseWallTileset, houseDoorTileset, furnitureTileset]; // 多个 Tileset
+        const houseTilesets = [houseWallTileset, houseDoorTileset, furnitureTileset]; // Multiple Tilesets
 
-        // 创建图层（名称要和 `tmj` 里的一致）
+        // Create a layer (the name should be consistent with that in 'tmj')
         this.waterLayer = this.map.createLayer('water1', waterTileset, 0, 0);
         this.grassLayer = this.map.createLayer('grass1', grassTileset, 0, -15);
 
-        // 左上角 -340, -55
+
         let houseX = 145
         let houseY = -55
         let houseScale = (2.5, 2.5)
-        this.houseFloorLayer = this.map.createLayer('houseFloor', houseWallTileset, houseX, houseY); // Floor 只有一个
+        this.houseFloorLayer = this.map.createLayer('houseFloor', houseWallTileset, houseX, houseY);
         this.houseLayer = this.map.createLayer('house', houseTilesets, houseX, houseY);
         this.furnitureLayer = this.map.createLayer('furniture', furnitureTileset, houseX, houseY);
 
         this.plantFieldLayer = this.map.createLayer('plantField', plantFieldTileset, -355, 10);
 
-        // 放大
+
         this.waterLayer.setScale(3.1);
         this.grassLayer.setScale(3);
 
@@ -415,14 +413,14 @@ export default class SproutIslandScene extends Phaser.Scene {
 
     createSprite() {
         // this.anims.create({
-        //     key: 'walk',   // 动画名称
-        //     frames: this.anims.generateFrameNumbers('cow', { start: 0, end: 4 }), // 从第0帧到第4帧
-        //     frameRate: 10, // 播放速度（每秒10帧）
-        //     repeat: -1     // 无限循环
+        //     key: 'walk',
+        //     frames: this.anims.generateFrameNumbers('cow', { start: 0, end: 4 }),
+        //     frameRate: 10,
+        //     repeat: -1
         // });
         //
         // this.cow = this.add.sprite(1000, 200, 'cow').setScale(2);
-        // this.cow.play('walk'); // 让小牛播放动画
+        // this.cow.play('walk');
 
         // this.waterWell = this.add.sprite(1000, 300, 'waterWell').setScale(2);
         //
@@ -430,10 +428,10 @@ export default class SproutIslandScene extends Phaser.Scene {
 
 
         this.anims.create({
-            key: 'float',   // 动画名称
-            frames: this.anims.generateFrameNumbers('boat', { start: 0, end: 1 }), // 从第0帧到第4帧
-            frameRate: 2, // 播放速度（每秒10帧）
-            repeat: -1     // 无限循环
+            key: 'float',   // Animation name
+            frames: this.anims.generateFrameNumbers('boat', { start: 0, end: 1 }), // From Frame 0 to Frame 4
+            frameRate: 2, // Playback speed (10 frames per second)
+            repeat: -1     // Infinite loop
         });
         this.boat = this.add.sprite(1380, 655, 'boat').setScale(3);
         this.boat.play('float');
@@ -443,26 +441,6 @@ export default class SproutIslandScene extends Phaser.Scene {
         // this.bush = this.add.sprite(800, 450, 'small chicken houses').setFrame(4).setScale(2);
     }
 
-    // 接收 belongings 数据，并在 Phaser 场景中渲染
-    // loadBelongingsIntoScene(belongings) {
-    //     belongings.forEach(item => {
-    //         let spriteKey = this.spriteMap[item.itemId] || 'cow';
-    //         // 创建 Phaser Sprite
-    //         let sprite = this.add.sprite(item.locationX, item.locationY, spriteKey)
-    //             .setScale(2)
-    //             .setInteractive({ cursor: 'pointer' })
-    //             .on('pointerdown', () => {
-    //                 console.log('DB item clicked:', sprite);
-    //                 this.sceneController.showItemOptions(sprite);
-    //             });
-    //         // 关键点：把“数据库记录的ID”存到 sprite 上
-    //         // 假设后端返回字段是 item.belongingId 或 item.id
-    //         sprite.belongingsId = item.belongingsId;
-    //         // 如果还需要“物品类型ID”，也可以赋值
-    //         sprite.itemId = item.itemId;
-    //
-    //     });
-    // }
 
     async loadUserBelongings() {
         try {
@@ -527,32 +505,29 @@ export default class SproutIslandScene extends Phaser.Scene {
         }
     }
 
-    // 1. 创建商店面板和“Store”按钮
+
     createStoreUI() {
-        // 创建 Store 按钮
         this.storeButton = this.add.image(1420, 20, 'buttons', 4)
             .setScale(3, 3)
             .setInteractive({ cursor: 'pointer' })
             .on('pointerdown', () => this.toggleStorePanel())
             .on('pointerover', () => {
-            this.storeButton.setTint(0xFFECB3);  // 浅棕色
+            this.storeButton.setTint(0xFFECB3);
         })
             .on('pointerout', () => {
                 this.storeButton.clearTint();
             });
 
-        // 添加 Store 文字
         this.storeText = this.add.text(1420, 18, 'Store', {fontFamily:'"Comic Sans MS", cursive', fontSize: '18px', fill: '#6D4C41' })
             .setOrigin(0.5);
 
-        // 创建 Store 面板（默认隐藏）
         this.storePanel = this.add.image(1380, 317, 'panel', 1)
             .setScale(3.75, 4.52)
             .setVisible(false)
             .setDepth(1);
     }
 
-    // 2. 切换商店面板的可见性
+
     toggleStorePanel() {
         const isVisible = !this.storePanel.visible;
         this.storePanel.setVisible(isVisible);
@@ -575,7 +550,6 @@ export default class SproutIslandScene extends Phaser.Scene {
     }
 
 
-    // 3. 从后端获取商店物品数据
     async loadStoreData() {
         try {
             const response = await fetch("http://localhost:8080/storeItems");
@@ -588,7 +562,7 @@ export default class SproutIslandScene extends Phaser.Scene {
         }
     }
 
-    // 4. 动态生成「物品类型」Tab 按钮，比如“Animal”、“Plant”、“Building”等
+    // Dynamically generate the "Item Type" Tab button
     createTypeTabs() {
         const types = [...new Set(this.storeItems.map(item => item.itemType))];
 
@@ -606,16 +580,16 @@ export default class SproutIslandScene extends Phaser.Scene {
                     this.activateTab(type);
                 })
                 .on('pointerover', () => {
-                    if (tabBg.fillColor !== 0xFFF59D) {  // 不是选中的时候才变颜色
-                        tabBg.setFillStyle(0xFFF9C4);  // 浅黄色
+                    if (tabBg.fillColor !== 0xFFF59D) {
+                        tabBg.setFillStyle(0xFFF9C4);
                     }
                 })
                 .on('pointerout', () => {
                     if (tabBg.fillColor !== 0xFFF59D) {
-                        tabBg.setFillStyle(0xFFFDE7);  // 恢复原色
+                        tabBg.setFillStyle(0xFFFDE7);
                     }
                 })
-                .setVisible(false); // 默认隐藏
+                .setVisible(false);
 
             let tabText = this.add.text(startX + index * gapX, startY, type, {
                 fontFamily: '"Comic Sans MS", cursive',
@@ -625,149 +599,81 @@ export default class SproutIslandScene extends Phaser.Scene {
             })
                 .setOrigin(0.5)
                 .setDepth(12)
-                .setVisible(false); // 默认隐藏
+                .setVisible(false);
 
             this.typeButtons.push({ bg: tabBg, text: tabText, type });
         });
 
-        // 默认选中第一个
+        // The first one is selected by default
         if (types.length > 0) {
             this.activateTab(types[0]);
         }
     }
 
     activateTab(selectedType) {
-        // 遍历所有 Tab，更新选中状态
         this.typeButtons.forEach(tab => {
             if (tab.type === selectedType) {
-                tab.bg.fillColor = 0xFFF59D; // 选中状态（深色）
+                tab.bg.fillColor = 0xFFF59D; // Selected state (dark)
                 tab.text.setColor('#6D4C41').setFontStyle('normal');
             } else {
-                tab.bg.fillColor = 0xFFFDE7; // 非选中状态（浅色）
+                tab.bg.fillColor = 0xFFFDE7; // Unselected state (light color)
                 tab.text.setColor('#795548').setFontStyle('normal');
             }
         });
-        // 更新显示的物品
+        // Update the displayed items
         this.showItems(selectedType);
     }
 
 
-    // 5. 根据选中的物品类型，在商店面板里排布对应的物品
-    // showItemsByType(selectedType) {
-    //     this.clearItemElements();
-    //     if (!this.storePanel.visible) return;
-    //
-    //     const filteredItems = this.storeItems.filter(i => i.itemType === selectedType);
-    //
-    //     let startX = 1250;
-    //     let startY = 155;
-    //     let gapX = 110;
-    //     let gapY = 110;
-    //     let colCount = 3;
-    //
-    //     filteredItems.forEach((item, idx) => {
-    //         let col = idx % colCount;
-    //         let row = Math.floor(idx / colCount);
-    //         let x = startX + col * gapX;
-    //         let y = startY + row * gapY;
-    //
-    //         // **创建一个 Container 统一管理所有元素**
-    //         let itemContainer = this.add.container(x, y);
-    //         this.itemElements.push(itemContainer);
-    //
-    //         // **1) 方形背景**
-    //         let bgRect = this.add.rectangle(0, 0, 85, 85, 0xFFFDE7)
-    //             .setOrigin(0.5)
-    //             .setStrokeStyle(1, 0x8D6E63);
-    //
-    //         // **2) 物品名称**
-    //         let nameText = this.add.text(0, 53, item.itemName, {
-    //             fontSize: '15px',
-    //             fill: '#6D4C41',
-    //             fontFamily: '"Comic Sans MS", cursive',
-    //             align: 'center'
-    //         }).setOrigin(0.5);
-    //
-    //         // **3) 物品 Sprite**
-    //         let sprite = this.add.sprite(0, -7, item.itemSprite)
-    //             .setFrame(item.frameIndex)
-    //             .setScale(1.6);
-    //
-    //         // **4) 物品价格**
-    //         let priceText = this.add.text(0, 30, `💰${item.itemPrice}`, {
-    //             fontSize: '15px',
-    //             fill: '#6D4C41',
-    //             fontFamily: '"Comic Sans MS", cursive',
-    //             align: 'center'
-    //         }).setOrigin(0.5);
-    //
-    //         // **将所有元素加入 Container**
-    //         itemContainer.add([bgRect, nameText, sprite, priceText]);
-    //
-    //         // **让整个物品框可交互**
-    //         itemContainer.setSize(80, 80);
-    //         itemContainer.setInteractive({ cursor: 'pointer' })
-    //             .on('pointerdown', () => this.sceneController.startPlacingItem(item))
-    //             .on('pointerover', () => bgRect.setFillStyle(0xFFF59D)) // 高亮
-    //             .on('pointerout', () => bgRect.setFillStyle(0xFFFDE7));  // 还原
-    //
-    //         this.itemElements.push(itemContainer);
-    //     });
-    // }
-
-
     showItems(selectedType) {
-        // 0) 清理之前的元素
+        // Clean up the previous elements
         this.clearItemElements();
         if (!this.storePanel.visible) return;
 
         const filteredItems = this.storeItems.filter(i => i.itemType === selectedType);
 
-        // 1) 一些布局相关的常量
-        let startX = 1258;      // 物品列表左上角X
-        let startY = 160;       // 物品列表左上角Y
-        let gapX = 115;         // 水平间距
-        let gapY = 118;         // 垂直间距
-        let colCount = 3;       // 每行列数
+        let startX = 1258;
+        let startY = 160;
+        let gapX = 115;
+        let gapY = 118;
+        let colCount = 3;
 
-        let viewHeight = 469;   // 可视区域（mask）高度
-        let viewWidth = colCount * gapX + 10; // 可视区域宽度（和列数 & 间距相关）
+        let viewHeight = 469;   // Visible area  height
+        let viewWidth = colCount * gapX + 10; // Visible area width
 
-        // 2) 计算内容高度 & 创建容器
+        // Calculate the content height & create the container
         let contentHeight = Math.ceil(filteredItems.length / colCount) * gapY;
-        // 避免出现 contentHeight = 0
+        // Avoid the situation where contentHeight = 0
         if (contentHeight < 1) contentHeight = 1;
 
         this.itemContainer = this.add.container(startX, startY);
-        // rect 相对容器本身的(0,0)，大小与显示区域一致
         this.itemElements.push(this.itemContainer);
 
-        // 3) 创建 mask 并将其隐藏，用来限制可视范围
+        // Create a mask and hide it to limit the visible range
         let maskGraphics = this.add.graphics();
         maskGraphics.fillStyle(0xffffff, 1);
-        // 在这里，你可以适当微调 mask 的位置和大小
         maskGraphics.fillRect(startX - 60, startY - 45, viewWidth, viewHeight);
         maskGraphics.setVisible(false);
         let mask = maskGraphics.createGeometryMask();
         this.itemContainer.setMask(mask)
             .setDepth(2);
 
-        // 4) 创建实际的物品 Box
+        // Create the actual item Box
         filteredItems.forEach((item, idx) => {
             let col = idx % colCount;
             let row = Math.floor(idx / colCount);
             let x = col * gapX;
             let y = row * gapY;
 
-            // 单个物品容器
+            // Single item container
             let itemBox = this.add.container(x, y);
 
-            // 背景
+            // background
             let bgRect = this.add.rectangle(0, 0, 90, 90, 0xFFFDE7)
                 .setOrigin(0.5)
                 .setStrokeStyle(1.2, 0x8D6E63);
 
-            // 物品名称
+            // Item name
             let nameText = this.add.text(0, 57, item.itemName, {
                 fontSize: '15px',
                 fill: '#6D4C41',
@@ -775,12 +681,12 @@ export default class SproutIslandScene extends Phaser.Scene {
                 align: 'center'
             }).setOrigin(0.5);
 
-            // 物品精灵
+            // Item Sprite
             let sprite = this.add.sprite(0, -5, item.itemSprite)
                 .setFrame(item.frameIndex)
                 .setScale(1.7);
 
-            // 价格文本
+            // Item Price
             let priceText = this.add.text(0, 33, `💰${item.itemPrice}`, {
                 fontSize: '15px',
                 fill: '#6D4C41',
@@ -788,62 +694,42 @@ export default class SproutIslandScene extends Phaser.Scene {
                 align: 'center'
             }).setOrigin(0.5);
 
-            // 加入子容器
+
             itemBox.add([bgRect, nameText, sprite, priceText]);
 
-            // 交互
+            // Interaction
             itemBox.setSize(90, 90);
             itemBox.setInteractive({ cursor: 'pointer' })
                 .on('pointerdown', () => this.sceneController.startPlacingItem(item))
                 .on('pointerover', () => bgRect.setFillStyle(0xFFF59D))
                 .on('pointerout',  () => bgRect.setFillStyle(0xFFFDE7));
 
-            // **存储原始 Y 位置**
-            // itemBox.originalY = y;
-            // // itemBox.originalY + 469 = y2;
-            //
-            // // **设置交互（初始可见的物品才可交互）**
-            // itemBox.setSize(90, 90);
-            // if (y >= 0) {
-            //     itemBox.setInteractive({ cursor: 'pointer' })
-            //         .on('pointerdown', () => this.sceneController.startPlacingItem(item))
-            //         .on('pointerover', () => bgRect.setFillStyle(0xFFF59D))
-            //         .on('pointerout', () => bgRect.setFillStyle(0xFFFDE7));
-            // }
 
-
-            // 将物品容器添加到大的 itemContainer
             this.itemContainer.add(itemBox);
         });
 
-        // 5) 计算最大滚动距离
+        // Calculate the maximum rolling distance
         this.scrollY = 0;
         let maxScroll = Math.max(0, contentHeight - viewHeight);
 
         // 6) 创建滚动条
-        //  先定义滚动条位置、大小
-        let scrollbarX = startX + viewWidth - 57; // X位置可以微调
-        let scrollbarY = startY - 50;            // Y位置可再微调
+        let scrollbarX = startX + viewWidth - 57;
+        let scrollbarY = startY - 50;
         let scrollbarWidth = 10;
         let scrollbarHeight = viewHeight;
 
-        //  创建滚动条本体（背景）
         let scrollbar = this.add.rectangle(scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, 0xFFF8E1)
             .setOrigin(0, 0)
             .setDepth(999);
         this.itemElements.push(scrollbar);
-        //  创建滑块
-        //  如果内容小于等于一屏，则不需要滚动——可隐藏或固定滑块
+
         if (contentHeight <= viewHeight) {
-            // 隐藏滚动条或让其不可拖动
             scrollbar.setVisible(false);
         }
 
-        // 计算滑块高度
+        // Calculate the height of the slider
         let ratio = viewHeight / contentHeight;
-        // 如果 ratio >= 1，说明内容不满一页，可直接让滑块和滚动条同高或隐藏
         let thumbHeight = ratio >= 1 ? scrollbarHeight : ratio * scrollbarHeight;
-
         let scrollThumb = this.add.rectangle(scrollbarX, scrollbarY, scrollbarWidth, thumbHeight, 0x8D6E63)
             .setOrigin(0, 0)
             .setDepth(1000)
@@ -851,20 +737,18 @@ export default class SproutIslandScene extends Phaser.Scene {
         this.itemElements.push(scrollThumb);
 
         if (ratio >= 1) {
-            // 若内容不够一页，也将滑块隐藏或设为不可移动
             scrollThumb.setVisible(false);
         }
 
 
 
-        // 7) 监听滚轮事件，实现滚动 & 同步滑块
+        // Listen for the scroll wheel event to implement the scroll & synchronous slider
         console.log("maxScroll:", maxScroll, "contentHeight:", contentHeight, "viewHeight:", viewHeight);
-        // 监听鼠标滚轮事件，让 itemContainer 和 scrollThumb 同步移动
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            let scrollSpeed = 30; // 滚动速度
+            let scrollSpeed = 30; // Rolling speed
             this.itemContainer.y -= (deltaY > 0) ? scrollSpeed : -scrollSpeed;
 
-            // 限制 itemContainer 滚动范围
+            // Limit the scrolling range of the itemContainer
             let maxScrollUp = startY;
             let maxScrollDown = startY - (contentHeight - viewHeight);
             if (this.itemContainer.y > maxScrollUp) {
@@ -873,19 +757,19 @@ export default class SproutIslandScene extends Phaser.Scene {
                 this.itemContainer.y = maxScrollDown;
             }
 
-            // **同步 scrollThumb 滑块的位置**
+            // Synchronize the position of the scrollThumb slider
             if (maxScroll > 0) {
                 let scrollRatio = (this.itemContainer.y - maxScrollDown) / (maxScrollUp - maxScrollDown);
                 scrollThumb.y = scrollbarY + (1 - scrollRatio) * (scrollbarHeight - thumbHeight);
             }
         });
 
-        // // 8) 拖动滑块
+        // // Drag the slider
         this.input.setDraggable(scrollThumb);
         scrollThumb.on('drag', (pointer, dragX, dragY) => {
             if (maxScroll <= 0) return; // 不需要滚动
 
-            // 限制滑块只能在滚动条范围内移动
+            // Restrict the slider to move only within the range of the scroll bar
             let newY = Phaser.Math.Clamp(
                 dragY,
                 scrollbarY,
@@ -893,9 +777,8 @@ export default class SproutIslandScene extends Phaser.Scene {
             );
             scrollThumb.y = newY;
 
-            // 计算滚动比例
+            // Calculate the rolling ratio
             let scrollRatio = (newY - scrollbarY) / (scrollbarHeight - thumbHeight);
-            // 将比例映射到 itemContainer
             this.scrollY = -scrollRatio * maxScroll;
             this.itemContainer.y = startY + this.scrollY;
         });
@@ -904,230 +787,11 @@ export default class SproutIslandScene extends Phaser.Scene {
     }
 
 
-    // showItemsByType(selectedType) {
-    //     // 0) 清理之前的元素
-    //     this.clearItemElements();
-    //     if (!this.storePanel.visible) return;
-    //
-    //     const filteredItems = this.storeItems.filter(i => i.itemType === selectedType);
-    //
-    //     // 1) 一些布局相关的常量
-    //     let startX = 1258;
-    //     let startY = 160;
-    //     let gapX = 115;
-    //     let gapY = 118;
-    //     let colCount = 3;
-    //
-    //     let viewHeight = 469;
-    //     let viewWidth = colCount * gapX + 10;
-    //
-    //     // 2) 计算内容总高度
-    //     let contentHeight = Math.ceil(filteredItems.length / colCount) * gapY;
-    //     if (contentHeight < 1) contentHeight = 1;
-    //
-    //     // 3) 创建容器 & 遮罩
-    //     this.itemContainer = this.add.container(startX, startY);
-    //     this.itemElements.push(this.itemContainer);
-    //
-    //     let maskGraphics = this.add.graphics();
-    //     maskGraphics.fillStyle(0xffffff, 1);
-    //     maskGraphics.fillRect(startX - 60, startY - 45, viewWidth, viewHeight);
-    //     maskGraphics.setVisible(false);
-    //     let mask = maskGraphics.createGeometryMask();
-    //     this.itemContainer.setMask(mask);
-    //
-    //     // **存储所有 itemBox**
-    //     this.itemBoxes = [];
-    //
-    //     // 4) 创建所有物品 Box
-    //     filteredItems.forEach((item, idx) => {
-    //         let col = idx % colCount;
-    //         let row = Math.floor(idx / colCount);
-    //         let x = col * gapX;
-    //         let y = row * gapY;
-    //
-    //         // 单个物品容器
-    //         let itemBox = this.add.container(x, y);
-    //
-    //         // 背景
-    //         let bgRect = this.add.rectangle(0, 0, 90, 90, 0xFFFDE7)
-    //             .setOrigin(0.5)
-    //             .setStrokeStyle(1.2, 0x8D6E63);
-    //
-    //         // 物品名称
-    //         let nameText = this.add.text(0, 57, item.itemName, {
-    //             fontSize: '15px',
-    //             fill: '#6D4C41',
-    //             fontFamily: '"Comic Sans MS", cursive',
-    //             align: 'center'
-    //         }).setOrigin(0.5);
-    //
-    //         // 物品精灵
-    //         let sprite = this.add.sprite(0, -5, item.itemSprite)
-    //             .setFrame(item.frameIndex)
-    //             .setScale(1.7);
-    //
-    //         // 价格文本
-    //         let priceText = this.add.text(0, 33, `💰${item.itemPrice}`, {
-    //             fontSize: '15px',
-    //             fill: '#6D4C41',
-    //             fontFamily: '"Comic Sans MS", cursive',
-    //             align: 'center'
-    //         }).setOrigin(0.5);
-    //
-    //         // 加入子容器
-    //         itemBox.add([bgRect, nameText, sprite, priceText]);
-    //
-    //         // **存储原始 Y 位置**
-    //         itemBox.originalY = y;
-    //
-    //         // **设置交互（初始可见的物品才可交互）**
-    //         itemBox.setSize(90, 90);
-    //         if (y >= startY ) {
-    //             itemBox.setInteractive({ cursor: 'pointer' })
-    //                 .on('pointerdown', () => this.sceneController.startPlacingItem(item))
-    //                 .on('pointerover', () => bgRect.setFillStyle(0xFFF59D))
-    //                 .on('pointerout', () => bgRect.setFillStyle(0xFFFDE7));
-    //         }
-    //
-    //         // **存入数组，后续控制交互**
-    //         this.itemBoxes.push(itemBox);
-    //
-    //         // 将物品容器添加到大的 itemContainer
-    //         this.itemContainer.add(itemBox);
-    //     });
-    //
-    //     // 5) 计算最大滚动距离
-    //     // this.scrollY = 0;
-    //     // let maxScroll = Math.max(0, contentHeight - viewHeight);
-    //
-    //     // 5) 计算最大滚动距离
-    //     this.scrollY = 0;
-    //     let maxScroll = Math.max(0, contentHeight - viewHeight);
-    //
-    //     // 6) 创建滚动条
-    //     //  先定义滚动条位置、大小
-    //     let scrollbarX = startX + viewWidth - 57; // X位置可以微调
-    //     let scrollbarY = startY - 50;            // Y位置可再微调
-    //     let scrollbarWidth = 10;
-    //     let scrollbarHeight = viewHeight;
-    //
-    //     //  创建滚动条本体（背景）
-    //     let scrollbar = this.add.rectangle(scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, 0xFFF8E1)
-    //         .setOrigin(0, 0)
-    //         .setDepth(999);
-    //     this.itemElements.push(scrollbar);
-    //     //  创建滑块
-    //     //  如果内容小于等于一屏，则不需要滚动——可隐藏或固定滑块
-    //     if (contentHeight <= viewHeight) {
-    //         // 隐藏滚动条或让其不可拖动
-    //         scrollbar.setVisible(false);
-    //     }
-    //
-    //     // 计算滑块高度
-    //     let ratio = viewHeight / contentHeight;
-    //     // 如果 ratio >= 1，说明内容不满一页，可直接让滑块和滚动条同高或隐藏
-    //     let thumbHeight = ratio >= 1 ? scrollbarHeight : ratio * scrollbarHeight;
-    //
-    //     let scrollThumb = this.add.rectangle(scrollbarX, scrollbarY, scrollbarWidth, thumbHeight, 0x8D6E63)
-    //         .setOrigin(0, 0)
-    //         .setDepth(1000)
-    //         .setInteractive({ cursor: 'pointer' });
-    //     this.itemElements.push(scrollThumb);
-    //
-    //     if (ratio >= 1) {
-    //         // 若内容不够一页，也将滑块隐藏或设为不可移动
-    //         scrollThumb.setVisible(false);
-    //     }
-    //
-    //     // 7) 监听滚轮事件，实现滚动 & 同步滑块
-    //     this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-    //         let scrollSpeed = 30; // 滚动速度
-    //         this.itemContainer.y -= (deltaY > 0) ? scrollSpeed : -scrollSpeed;
-    //
-    //         // 限制 itemContainer 滚动范围
-    //         let maxScrollUp = startY;
-    //         let maxScrollDown = startY - (contentHeight - viewHeight);
-    //         if (this.itemContainer.y > maxScrollUp) {
-    //             this.itemContainer.y = maxScrollUp;
-    //         } else if (this.itemContainer.y < maxScrollDown) {
-    //             this.itemContainer.y = maxScrollDown;
-    //         }
-    //
-    //         // **同步 scrollThumb 滑块的位置**
-    //         if (maxScroll > 0) {
-    //             let scrollRatio = (this.itemContainer.y - maxScrollDown) / (maxScrollUp - maxScrollDown);
-    //             scrollThumb.y = scrollbarY + (1 - scrollRatio) * (scrollbarHeight - thumbHeight);
-    //         }
-    //
-    //         // **检查可视区域**
-    //         this.checkVisibleItems(scrollThumb, scrollbarY, scrollbarHeight, thumbHeight, contentHeight, viewHeight,startY);
-    //     });
-    //
-    //
-    //     // 8) 拖动滑块
-    //     this.input.setDraggable(scrollThumb);
-    //     scrollThumb.on('drag', (pointer, dragX, dragY) => {
-    //         if (maxScroll <= 0) return; // 不需要滚动
-    //
-    //         // 限制滑块只能在滚动条范围内移动
-    //         let newY = Phaser.Math.Clamp(
-    //             dragY,
-    //             scrollbarY,
-    //             scrollbarY + scrollbarHeight - thumbHeight
-    //         );
-    //         scrollThumb.y = newY;
-    //
-    //         // 计算滚动比例
-    //         let scrollRatio = (newY - scrollbarY) / (scrollbarHeight - thumbHeight);
-    //         // 将比例映射到 itemContainer
-    //         this.scrollY = -scrollRatio * maxScroll;
-    //         this.itemContainer.y = startY + this.scrollY;
-    //
-    //         // **检查可视区域**
-    //         this.checkVisibleItems(scrollThumb, scrollbarY, scrollbarHeight, thumbHeight, contentHeight, viewHeight,startY);
-    //     });
-    //
-    //     // // **初次检查可视区域**
-    //     // this.checkVisibleItems();
-    //     this.checkVisibleItems(scrollThumb, scrollbarY, scrollbarHeight, thumbHeight, contentHeight, viewHeight,startY);
-    // }
-
-// **检查 itemBox 是否在可视范围内**
-    checkVisibleItems(scrollThumb, scrollbarY, scrollbarHeight, thumbHeight, contentHeight, viewHeight,startY) {
-        let localTop = 0;
-        let localBottom = 469;
-
-        // **根据滚动条 scrollThumb 位置调整 localBottom**
-        let scrollRatio = (scrollThumb.y - scrollbarY) / (scrollbarHeight - thumbHeight);
-        let scrollOffset = scrollRatio * (contentHeight - viewHeight);
-
-        // localBottom 需要随着滚动增加/减少
-        localBottom += scrollOffset;
-        localTop += scrollOffset;
-
-        this.itemBoxes.forEach(box => {
-            // 计算物品的实际 Y 位置（相对于 itemContainer）
-            let boxY = box.originalY + (this.itemContainer.y - startY);
-
-            if (boxY + 45 < localTop || boxY - 45 > localBottom) {
-                box.disableInteractive(); // 超出可视范围，禁用交互
-            } else {
-                if (!box.input?.enabled) {
-                    box.setInteractive({ cursor: 'pointer' });
-                }
-            }
-        });
-    }
-
-
-
-    // 6. 清除上一次显示的物品网格（避免重复堆叠）
+    // Clear the item grid that was displayed last time
     clearItemElements() {
-        this.itemElements.forEach(elem => elem.destroy());  // 删除所有物品元素
+        this.itemElements.forEach(elem => elem.destroy());
         this.itemElements = [];
 
-        // 可选：移除滚轮监听，防止多次注册
         this.input.removeListener('wheel');
     }
 

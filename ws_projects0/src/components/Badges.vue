@@ -1,12 +1,10 @@
 <template>
   <div class="badges-container">
-    <!-- 第一行: Sprout Island 和 Timer -->
     <div class="badge-row">
       <!-- Sprout Island Badges -->
       <div class="badge-category">
         <h2>Sprout Island Badges</h2>
         <div class="badge-items">
-          <!-- LV1 Badge: Display if belongingsCount is 5 or more -->
           <div class="badge-item">
             <el-tooltip class="item" effect="dark" content="Have 5 items on Sprout Island" placement="bottom">
               <div class="badge-box">
@@ -15,8 +13,6 @@
             </el-tooltip>
             <p>Sprout LV1</p>
           </div>
-
-          <!-- LV2 Badge: Display if belongingsCount is 50 or more -->
           <div class="badge-item">
             <el-tooltip class="item" effect="dark" content="Have 50 items on Sprout Island" placement="bottom">
               <div class="badge-box">
@@ -25,8 +21,6 @@
             </el-tooltip>
             <p>Sprout LV2</p>
           </div>
-
-          <!-- LV3 Badge: Display if belongingsCount is 100 or more -->
           <div class="badge-item">
             <el-tooltip class="item" effect="dark" content="Have 100 items on Sprout Island" placement="bottom">
               <div class="badge-box">
@@ -70,7 +64,6 @@
       </div>
     </div>
 
-    <!-- 第二行: Task 和 Schedule -->
     <div class="badge-row">
       <!-- Task Badges -->
       <div class="badge-category">
@@ -186,10 +179,7 @@ onMounted(async () => {
   } catch (error) {
     console.error('Error fetching schedule count:', error);
   }
-
 });
-
-
 
 </script>
 
@@ -197,66 +187,66 @@ onMounted(async () => {
 <style scoped>
 .badges-container {
   background: #F9FBF7;
-  display: flex; /* 使用 Flexbox 来布局容器 */
-  flex-direction: column; /* 设置主轴方向为垂直，所有子元素按列排列 */
-  gap: 10px; /* 设置子元素之间的间距 */
-  align-items: center; /* 水平居中对齐子元素 */
-  width: 100%; /* 设置容器的宽度为100% */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
   height: 85vh;
-  padding-top: 75px; /* 设置顶部间距 */
+  padding-top: 75px;
 }
 
 .badge-row {
-  display: flex; /* 使用 Flexbox 来布局每一行 */
-  justify-content: space-around; /* 在一行中均匀分布徽章 */
-  width: 90%; /* 设置每一行的宽度为90% */
+  display: flex;
+  justify-content: space-around;
+  width: 90%;
 }
 
 .badge-category {
-  width: 45%; /* 设置每一类徽章的宽度为45%，占用容器的部分宽度 */
+  width: 45%;
 }
 
 h2 {
-  text-align: center; /* 将标题居中对齐 */
-  font-size: 24px; /* 设置标题字体大小 */
-  color: #4e6b50; /* 设置标题颜色 */
-  margin-bottom: 35px; /* 设置标题下方的间距 */
+  text-align: center;
+  font-size: 24px;
+  color: #4e6b50;
+  margin-bottom: 35px;
 }
 
 .badge-items {
-  display: flex; /* 使用 Flexbox 来布局徽章项 */
-  justify-content: space-around; /* 在一行中均匀分布徽章项 */
-  gap: 20px; /* 设置徽章项之间的间距 */
-  margin-bottom: 20px; /* 设置徽章项下方的间距 */
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 .badge-item {
-  width: 130px; /* 设置每个徽章项的宽度 */
-  text-align: center; /* 将徽章项中的文本居中对齐 */
-  margin-bottom: 10px; /* 设置每个徽章项下方的间距 */
+  width: 130px;
+  text-align: center;
+  margin-bottom: 10px;
 }
 
 .badge-box {
-  width: 130px; /* 设置徽章框的宽度 */
-  height: 130px; /* 设置徽章框的高度 */
-  border-radius: 10px; /* 设置圆角 */
-  overflow: hidden; /* 隐藏溢出的内容 */
-  display: flex; /* 使用 Flexbox 布局，确保图片居中 */
-  justify-content: center; /* 水平居中图片 */
-  align-items: center; /* 垂直居中图片 */
-  background-color: white; /* 设置徽章框的背景颜色 #e9f1e1*/
+  width: 130px;
+  height: 130px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 .badge-box img {
-  max-width: 70%; /* 设置图片的最大宽度为徽章框的70% */
-  max-height: 70%; /* 设置图片的最大高度为徽章框的70% */
+  max-width: 70%;
+  max-height: 70%;
 }
 
 .badge-item p {
-  margin-top: 10px; /* 设置文本与图片之间的间距 */
-  font-size: 18px; /* 设置文本字体大小 */
-  color: #4e6b50; /* 设置文本颜色 */
+  margin-top: 10px;
+  font-size: 18px;
+  color: #4e6b50;
   justify-content: center;
 }
 

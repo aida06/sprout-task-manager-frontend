@@ -1,6 +1,6 @@
 export default class SproutIslandController {
     constructor(scene) {
-        this.scene = scene;  // 绑定 Phaser 场景
+        this.scene = scene;  // Bind the Phaser scenario
         this.isPlacing = false;
         this.placingItem = null;
         this.isMoving = false;
@@ -9,7 +9,6 @@ export default class SproutIslandController {
         this.ghostText = null;
         this.currentItem = null;
 
-        // 把那两个 ref 拿过来
         this.userIdRef = scene.userIdRef
         this.userCoinsRef = scene.userCoinsRef
         this.itemPriceMap = {};
@@ -18,7 +17,7 @@ export default class SproutIslandController {
         this.loadItemPriceMap();
     }
 
-    // **开始放置模式**
+    // Start the placement mode
     startPlacingItem(item) {
         console.log("User coins:", this.userCoinsRef.value);
 
@@ -60,7 +59,7 @@ export default class SproutIslandController {
         this.scene.input.keyboard.on('keydown-W', this.cancelPlace, this);
     }
 
-    // **按 Q 确认放置**
+    // Press Q to confirm the placement
     async confirmPlace() {
         if (!this.isPlacing) return;
         console.log('Placing item at:', this.ghostSprite.x, this.ghostSprite.y);
@@ -69,7 +68,7 @@ export default class SproutIslandController {
 
     }
 
-    // **按 W 取消放置**
+    // Press W to cancel the placement
     cancelPlace() {
         if (this.ghostSprite) {
             this.ghostSprite.destroy();
@@ -88,7 +87,6 @@ export default class SproutIslandController {
     }
 
 
-    // **实际放置物品**
     async placeItem(x, y) {
         if (!this.placingItem) return;
         const tile = this.scene.grassLayer.getTileAtWorldXY(x, y);
@@ -99,7 +97,7 @@ export default class SproutIslandController {
 
         const purchaseSuccess = await this.purchaseItem(this.placingItem);
         if (!purchaseSuccess) {
-            return; // 如果金币不足，就不放置物品
+            return; // If there are not enough gold coins, do not place items
         }
 
         let newItem = this.scene.add.sprite(x, y, this.placingItem.itemSprite).setScale(2);
@@ -140,10 +138,9 @@ export default class SproutIslandController {
         if (!this.userCoinsRef.value || this.userCoinsRef.value < item.itemPrice) {
             console.error("Not enough coins!");
             alert("Not enough coins to buy this item!");
-            return false; // 告诉外面“购买失败”
+            return false;
         }
         try {
-            // 发送后端请求，扣除金币
             await fetch("http://localhost:8080/user/updateCoins", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -153,19 +150,17 @@ export default class SproutIslandController {
                 })
             });
 
-            // 前端手动更新 userCoins
             this.userCoinsRef.value = Number((this.userCoinsRef.value - item.itemPrice).toFixed(2));
-
             console.log(`Purchased item: ${item.itemId}, cost: ${item.itemPrice} coins. New balance: ${this.userCoinsRef.value}`);
-            return true; // 购买成功
+            return true;
         } catch (err) {
             console.error("Failed to update coins:", err);
-            return false; // 出错也当做失败处理
+            return false;
         }
     }
 
 
-    // **显示物品选项**
+    // Display item options
     showItemOptions(newItem) {
         if (this.currentItem === newItem && this.moveButton) {
             this.clearItemOptions();
@@ -173,8 +168,8 @@ export default class SproutIslandController {
             return;
         }
         // this.loadItemPriceMap();
-        // 计算返还金币
-        const price = this.itemPriceMap[newItem.itemId]; // 从本地 Map 取值
+        // Calculate the return of coins
+        const price = this.itemPriceMap[newItem.itemId]; // Retrieve the value from the local Map
         if (price === undefined) {
             console.error(`Item ${newItem.itemId} price not found in map`);
             return;
@@ -187,18 +182,16 @@ export default class SproutIslandController {
         let bounds = newItem.getBounds();
         let optionX = bounds.centerX;
         let optionY2 = bounds.bottom + 10;
-        // 在图标上方再留一点空间显示悬浮提示
         let optionY = bounds.top - 10;
 
-        // Move 按钮
+        // Move
         this.moveButton = this.scene.add.rectangle(optionX - 25, optionY, 45, 30, 0xA5D6A7)
             .setStrokeStyle(1, 0xFFFFFF)
             .setInteractive({ cursor: 'pointer' })
             // .on('pointerdown', () => this.startMovingItem(newItem))
-            // 悬浮时显示提示文字
             .on('pointerover', () => {
                     this.movetip = this.scene.add.text(
-                        optionX,            // 与按钮对齐或稍作调整
+                        optionX,
                         optionY2,
                         `Move me to a better location ? `,
                         {
@@ -209,7 +202,6 @@ export default class SproutIslandController {
                         }
                     ).setOrigin(0.5);
                 })
-            // 移出时销毁提示文字
             .on('pointerout', () => {
                 if (this.movetip) {
                     this.movetip.destroy();
@@ -230,15 +222,14 @@ export default class SproutIslandController {
             align: 'center'
         }).setOrigin(0.5);
 
-        // Sale 按钮
+        // Sell
         this.saleButton = this.scene.add.rectangle(optionX + 25, optionY, 45, 30, 0xEF9A9A)
             .setStrokeStyle(1, 0xFFFFFF)
             .setInteractive({ cursor: 'pointer' })
             // .on('pointerdown', () => this.sellItem(newItem))
-            // 悬浮时显示提示文字
             .on('pointerover', () => {
                 this.refundTooltip = this.scene.add.text(
-                    optionX,            // 与按钮对齐或稍作调整
+                    optionX,
                     optionY2,
                     `Sell me for half the price:💰${refundCoins} ? `,
                     {
@@ -249,7 +240,6 @@ export default class SproutIslandController {
                     }
                 ).setOrigin(0.5);
             })
-            // 移出时销毁提示文字
             .on('pointerout', () => {
                 if (this.refundTooltip) {
                     this.refundTooltip.destroy();
@@ -275,7 +265,7 @@ export default class SproutIslandController {
     }
 
 
-    // **初始化时拉取 itemPriceMap**
+    // Pull the itemPriceMap during initialization
     async loadItemPriceMap() {
         try {
             const response = await fetch("http://localhost:8080/storeItems/itemPriceMap");
@@ -288,12 +278,11 @@ export default class SproutIslandController {
     }
 
 
-    // **删除物品**
+    // Delete item
     async sellItem(item) {
         if (!item) return;
 
         try {
-            // 先删除数据库中的物品
             const response = await fetch(`http://localhost:8080/userBelongings/delete/${item.belongingsId}`, {
                 method: 'DELETE'
             });
@@ -301,8 +290,7 @@ export default class SproutIslandController {
             if (response.ok) {
                 console.log(`Item ${item.belongingsId} deleted from database!`);
 
-                // 计算返还金币
-                const price = this.itemPriceMap[item.itemId]; // 从本地 Map 取值
+                const price = this.itemPriceMap[item.itemId];
                 if (price === undefined) {
                     console.error(`Item ${item.itemId} price not found in map`);
                     return;
@@ -310,7 +298,6 @@ export default class SproutIslandController {
 
                 const refundCoins = Number((price / 2).toFixed(2));
 
-                // 发送后端请求，更新金币
                 const coinResponse = await fetch("http://localhost:8080/user/updateCoins", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -321,14 +308,13 @@ export default class SproutIslandController {
                 });
 
                 if (coinResponse.ok) {
-                    // 更新前端金币数
                     this.userCoinsRef.value = Number((this.userCoinsRef.value + refundCoins).toFixed(2));
                     console.log(`Sold item: ${item.belongingsId}, received: ${refundCoins} coins. New balance: ${this.userCoinsRef.value}`);
                 } else {
                     console.error("Failed to update coins:", await coinResponse.text());
                 }
 
-                // 从场景中移除物品
+                // Remove items from the scene
                 item.destroy();
                 this.clearItemOptions();
                 this.currentItem = null;
@@ -342,7 +328,6 @@ export default class SproutIslandController {
     }
 
 
-    // **清除选项 UI**
     clearItemOptions() {
         if (this.moveButton) this.moveButton.destroy();
         if (this.saleButton) this.saleButton.destroy();
@@ -461,7 +446,6 @@ export default class SproutIslandController {
         this.scene.input.keyboard.off('keydown-Q', this.confirmMove, this);
         this.scene.input.keyboard.off('keydown-W', this.cancelMove, this);
     }
-
 
 
 }

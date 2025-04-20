@@ -1,9 +1,9 @@
 <template>
   <div class="focus-timer-container" :style="{ backgroundImage: `url(${selectedBackground})` }">
-    <!-- 倒计时圆圈 -->
+    <!-- Countdown circle -->
     <div class="timer-circle">
       <svg width="300" height="300" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="90" stroke="rgb(245, 245, 245,1)" stroke-width="12" fill="none"/>  # 灰色背景圆
+        <circle cx="100" cy="100" r="90" stroke="rgb(245, 245, 245,1)" stroke-width="12" fill="none"/>
         <circle
             cx="100"
             cy="100"
@@ -14,12 +14,12 @@
             stroke-dasharray="565.48"
             :stroke-dashoffset="(remainingTime / totalDuration) * 565.48"
             stroke-linecap="round"
-        />  # 动态倒计时圆
+        />
       </svg>
       <span class="timer-text">{{ formattedTime }}</span>
     </div>
 
-    <!-- 控制按钮 -->
+    <!-- Control buttons -->
     <div class="timer-controls">
       <button class="light-button" @click="showBackgroundPanel = true">
         <el-icon><Picture /></el-icon> Background
@@ -28,7 +28,6 @@
       <button class="light-button" @click="showSoundPanel = true">
         <el-icon><Headset /></el-icon> Sound
       </button>
-
 
       <button v-if="!isPaused" class="light-button" @click="pauseTimer">
         <el-icon><VideoPause /></el-icon>  Pause
@@ -48,10 +47,10 @@
 
     </div>
 
-    <!-- Background 面板 -->
+    <!-- Background Panel -->
     <el-dialog v-model="showBackgroundPanel" title="Select Timer Background">
       <div>
-        <!-- 圆形 Tab 切换不同颜色的壁纸 -->
+        <!-- The circular Tab switches wallpapers of different colors -->
         <div class="color-tabs">
           <button
               v-for="(color, index) in Object.keys(backgroundCategories)"
@@ -59,10 +58,10 @@
               :class="{ active: activeTab === color }"
               class="color-tab"
               @click="activeTab = color">
-          </button>  <!-- 没有文字，只有按钮 -->
+          </button>
         </div>
 
-        <!-- 当前选中的背景图片 -->
+        <!-- The currently selected background image -->
         <div class="background-options">
           <div v-for="(bg, index) in backgroundCategories[activeTab]" :key="index" class="bg-item">
             <img
@@ -70,7 +69,7 @@
                 class="bg-thumbnail"
                 @click="setBackground(bg)"
             />
-            <p class="bg-name">{{ getBackgroundName(bg) }}</p> <!-- 显示文件名 -->
+            <p class="bg-name">{{ getBackgroundName(bg) }}</p>
           </div>
         </div>
       </div>
@@ -86,15 +85,15 @@
           :class="{ active: selectedSound === sound.value }"
           @click="setSound(sound.value)"
       >
-        <!-- 如果sound.img为空，则不渲染图片 -->
+        <!-- If sound.img is empty, the image will not be rendered -->
         <img v-if="sound.img" :src="sound.img" class="sound-thumbnail" />
-        <!-- 如果没有图片，显示默认空白圆圈 -->
+        <!-- If there is no picture, display the default blank circle-->
         <div v-else class="sound-thumbnail none-thumbnail"></div>
         <div class="sound-name">{{ sound.label }}</div>
       </div>
     </div>
 
-    <!-- audio元素 -->
+    <!-- audio  -->
     <audio ref="audioPlayer" loop></audio>
   </el-dialog>
 
@@ -111,7 +110,7 @@ import {Picture, Headset, VideoPause, VideoPlay, Remove, Check} from '@element-p
 const route = useRoute();
 const router = useRouter();
 
-// 从 URL 获取任务设定的 duration，如果没有，默认 30 分钟
+// Obtain the duration of the task setting from the URL.
 const totalDuration = ref(Number(route.query.duration) * 60|| 30 * 60);
 const remainingTime = ref(totalDuration.value);
 const isPaused = ref(false);
@@ -129,104 +128,87 @@ const { selectedTask } = storeToRefs(taskStore);
 const { completedTasks } = storeToRefs(taskStore);
 
 
-// 计算倒计时格式（MM:SS）
+// Calculate the countdown format (MM:SS)
 const formattedTime = computed(() => {
   const minutes = Math.floor(remainingTime.value / 60);
   const seconds = remainingTime.value % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 });
 
-// 记录开始时间
+
 const startTime = ref(null);
 
 
-// **修改倒计时逻辑**
 const startTimer = () => {
   if (timer) return;
   timer = setInterval(() => {
     if (remainingTime.value > 0) {
       remainingTime.value--;
     } else {
-      stopTimer(true); // 计时结束后，正常完成任务
+      stopTimer(true); //After the timing ends, complete the task normally
     }
   }, 1000);
 };
 
-// 暂停倒计时
+
 const pauseTimer = () => {
   isPaused.value = true;
   clearInterval(timer);
   timer = null;
 };
 
-// 继续倒计时
+
 const resumeTimer = () => {
   isPaused.value = false;
   startTimer();
 };
 
 
-// **停止(放弃)倒计时(返回主页)**
 const stopTimer = (isCompleted = false) => {
   clearInterval(timer);
   timer = null;
-
-  // 弹出提示
-  // const message = isCompleted
-  //     ? "Focus time is over! You obtain reward coins. 🎉"
-  //     : "You gave up! No coins awarded.";
-  // alert(message);
 
   const message = isCompleted
       ? "Focus time is over! You obtain reward coins. 🎉"
       : "You gave up! No coins awarded.";
 
   ElMessageBox.confirm(
-      message,  // 显示的提示信息
+      message,
       {
-        confirmButtonText: 'OK',  // 确认按钮文字
-        type: isCompleted ? 'success' : 'warning',  // 根据 isCompleted 设置颜色类型
-        showCancelButton: false,  // 不显示取消按钮
-        closeOnClickModal: false, // 禁止点击背景关闭弹窗
-        showClose: false, // 禁用关闭按钮
+        confirmButtonText: 'OK',
+        type: isCompleted ? 'success' : 'warning',
+        showCancelButton: false,
+        closeOnClickModal: false,
+        showClose: false,
       }
   )
       .then(() => {
-        // ElMessage.success('You have confirmed the action!');
-        // 在确认后执行跳转和倒计时重置
-        remainingTime.value = totalDuration.value * 60; // 重置倒计时
-        router.push("/task-management"); // 返回主页
+        remainingTime.value = totalDuration.value * 60; // Reset countdown
+        router.push("/task-management"); // Return to the homepage
       });
 
 
-  const durationInSeconds = totalDuration.value; // 确保 duration 以秒为单位
-// 计算 endTime = startTime + duration
+  const durationInSeconds = totalDuration.value; // Make sure the duration is in seconds
+// endTime = startTime + duration
   const endTime = new Date(startTime.value.getTime() + durationInSeconds * 1000);
 
-  // 如果 isCompleted，则发送 axios 请求存储到数据库
+  // If isCompleted, send an axios request to store it in the database
   if (isCompleted) {
     saveFocusTimerData(endTime);
   }
 
-  // 如果有 selectedTask，且 isCompleted，更新前端的积分和任务状态
+  // If a selectedTask is completed, update the points and task status at the front end
   if (isCompleted && selectedTask.value) {
     updateUserCoins(selectedTask.value.rewardCoins);
     completedTasks.value.push(selectedTask.value);
     selectedTask.value = null;
   }
 
-  // 让 alert 完成后再执行跳转
-  // setTimeout(() => {
-  //   remainingTime.value = totalDuration.value * 60; // 重置倒计时
-  //   router.push("/task-management"); // 返回主页
-  // }, 0);
 };
 
 
-// 保存计时结果到数据库
 const saveFocusTimerData = async (endTime) => {
   try {
-    // 如果没有选定的任务名，可做个兜底值
     const taskName = selectedTask.value
         ? selectedTask.value.taskName
         : "Unnamed";
@@ -234,9 +216,9 @@ const saveFocusTimerData = async (endTime) => {
     const response = await axios.post("http://localhost:8080/focusTimer/saveFocus", {
       userId: userId.value,
       taskName: taskName,
-      duration: totalDuration.value,   // 秒或分钟，请与后端字段含义对应
-      successful: true,                // 1表示成功，0表示放弃
-      startTime: startTime.value.toISOString(),     // 传给后端，注意后端解析格式
+      duration: totalDuration.value,
+      successful: true,
+      startTime: startTime.value.toISOString(),
       endTime: endTime.toISOString(),
     });
 
@@ -247,7 +229,7 @@ const saveFocusTimerData = async (endTime) => {
 };
 
 
-// **更新用户积分**
+// Update user coins
 const updateUserCoins = async (rewardCoins) => {
   try {
     await axios.post("http://localhost:8080/user/updateCoins", {
@@ -255,31 +237,31 @@ const updateUserCoins = async (rewardCoins) => {
       rewardCoins: Number(rewardCoins)
     });
 
-    // **前端手动更新 userCoins**
     userCoins.value += rewardCoins;
   } catch (err) {
     console.error("Failed to update coins:", err);
   }
 };
 
-// 组件挂载时启动倒计时
+// The countdown is initiated when the component is mounted
 onMounted(() => {
-  startTime.value = new Date(); // 或者 new Date().toISOString()
+  startTime.value = new Date();
   startTimer();
 });
 
-// 组件卸载时清除计时器
+// Clear the timer when the component is unloaded
 onUnmounted(() => {
   clearInterval(timer);
 });
 
 
+const showBackgroundPanel = ref(false);
 
-const showBackgroundPanel = ref(false);  // 控制背景面板显示
+// Wallpapers of the Green category are displayed by default
+const activeTab = ref("Green");
 
-const activeTab = ref("Green");  // 默认显示 Green 分类的壁纸
-
-const selectedBackground = ref("src/wallpaper/Green/DayStudy.png");  // 默认背景
+// Default background
+const selectedBackground = ref("src/wallpaper/Green/DayStudy.png");
 
 const backgroundCategories = ref({
   "Green": [
@@ -296,10 +278,24 @@ const backgroundCategories = ref({
   "Blue": [
     "src/wallpaper/Blue/NightStudy.png",
     "src/wallpaper/Blue/EveningStreet.png",
-    "src/wallpaper/Blue/Sea.png"
+    "src/wallpaper/Blue/Sea.png",
+    "src/wallpaper/Blue/Store.png",
+    "src/wallpaper/Blue/UrbanRoad.png",
+    "src/wallpaper/Blue/SnowMountain.png",
+    "src/wallpaper/Blue/CloudSea.png",
+    "src/wallpaper/Blue/Boat.png",
+    "src/wallpaper/Blue/Shanshui.png",
   ],
   "Purple": [
-    "src/wallpaper/Purple/WinterCity.png"
+    "src/wallpaper/Purple/WinterCity.png",
+    "src/wallpaper/Purple/Room.png",
+    "src/wallpaper/Purple/Landscape.jpg",
+    "src/wallpaper/Purple/Moon.jpg",
+    "src/wallpaper/Purple/EvenfallStreet.png",
+    "src/wallpaper/Purple/Sunset.png",
+    "src/wallpaper/Purple/RiverBank.png",
+    "src/wallpaper/Purple/FlowerField.png",
+    "src/wallpaper/Purple/Bridge.jpg",
   ],
   "Yellow": [
     "src/wallpaper/Yellow/AutumnCity.jpg",
@@ -307,7 +303,10 @@ const backgroundCategories = ref({
     "src/wallpaper/Yellow/FlowerWindow.png",
     "src/wallpaper/Yellow/LondonKitty.png",
     "src/wallpaper/Yellow/SunsetSea.png",
-
+    "src/wallpaper/Yellow/FlowerField.jpg",
+    "src/wallpaper/Yellow/Forest.jpg",
+    "src/wallpaper/Yellow/Sunrise.jpg",
+    "src/wallpaper/Yellow/Shanshui.jpg",
   ]
 });
 
@@ -315,41 +314,40 @@ const backgroundCategories = ref({
 const getBackgroundName = (bg) => {
   const name = bg.split("/").pop().replace(/\.(png|jpg|jpeg)$/i, "");
   return name
-      .replace(/_/g, ' ')                    // 先处理下划线（如 Day_Study → Day Study）
-      .replace(/([a-z])([A-Z])/g, '$1 $2');  // 再处理驼峰（如 DayStudy → Day Study）
+      .replace(/_/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2');
 };
 
 
-// 切换背景
+// Switch the background
 const setBackground = (bg) => {
-  console.log("Selected background path:", bg); // 查看实际路径
-  selectedBackground.value = bg;  // 直接修改 Vue 绑定的 `style`
+  console.log("Selected background path:", bg);
+  selectedBackground.value = bg;
 };
 
 
-// 控制音乐面板显示
 const showSoundPanel = ref(false);
 
-// 默认无声音
+// Default: No sound
 const selectedSound = ref("none");
 
-// 音效列表（确保路径正确）
+// Sound List
 const soundList = ref([
   { value: "none", label: "None", img: "", audio: "" },
-  { value: "Forest", label: "Forest", img: "/src/sound/cover/Forest3.jpg", audio: "/src/sound/Forest1.mp3" },
+  { value: "Forest", label: "Forest", img: "/src/sound/cover/Forest.jpg", audio: "/src/sound/Forest.mp3" },
   { value: "Brook", label: "Brook", img: "/src/sound/cover/Brook.jpg", audio: "/src/sound/Brook.mp3" },
-  { value: "Wave", label: "Wave", img: "/src/sound/cover/Wave1.jpeg", audio: "/src/sound/Wave.mp3" },
-  { value: "Rain", label: "Rain", img: "/src/sound/cover/Rain5.jpg", audio: "/src/sound/Rain.mp3" },
-  { value: "Fireplace", label: "Fireplace", img: "/src/sound/cover/Fire9.jpg", audio: "/src/sound/Fire1.mp3" },
+  { value: "Wave", label: "Wave", img: "/src/sound/cover/Wave.jpeg", audio: "/src/sound/Wave.mp3" },
+  { value: "Rain", label: "Rain", img: "/src/sound/cover/Rain.jpg", audio: "/src/sound/Rain.mp3" },
+  { value: "Fireplace", label: "Fireplace", img: "/src/sound/cover/Fire.jpg", audio: "/src/sound/Fire.mp3" },
   { value: "Write", label: "Write", img: "/src/sound/cover/Write.jpg", audio: "/src/sound/Write.mp3" },
-  { value: "City", label: "City", img: "/src/sound/cover/City4.jpg", audio: "/src/sound/City.mp3" },
+  { value: "City", label: "City", img: "/src/sound/cover/City.jpg", audio: "/src/sound/City.mp3" },
   { value: "Piano", label: "Piano", img: "/src/sound/cover/Piano.jpg", audio: "/src/sound/Piano.mp3" },
 
 ]);
 
 const audioPlayer = ref(null);
 
-// 设置音效
+
 const setSound = (sound) => {
   selectedSound.value = sound;
 
@@ -360,11 +358,11 @@ const setSound = (sound) => {
     const selectedAudio = soundList.value.find(s => s.value === sound).audio;
     audioPlayer.value.src = selectedAudio;
 
-    // 根据音效类型单独调整音量
+    // Adjust the volume separately according to the type of sound effect
     if (sound === 'Rain' || sound === 'Forest') {
-      audioPlayer.value.volume = 0.2; // rain和forest降低到30%
+      audioPlayer.value.volume = 0.2;   // rain and forest have been reduced to 30%
     } else {
-      audioPlayer.value.volume = 1; // 其他音效默认100%
+      audioPlayer.value.volume = 1;   // Other sound effects default to 100%
     }
 
     audioPlayer.value.play();
@@ -379,8 +377,8 @@ const setSound = (sound) => {
 .sound-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  row-gap: 22px;      /* 垂直方向间距 */
-  column-gap: 8px;   /* 水平方向间距 */
+  row-gap: 22px;
+  column-gap: 8px;
   justify-items: center;
   align-items: center;
   padding: 15px;
@@ -392,7 +390,7 @@ const setSound = (sound) => {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  position: relative; /* 必须设置这个 */
+  position: relative;
   transition: transform 0.4s ease-in-out;
 }
 
@@ -401,7 +399,7 @@ const setSound = (sound) => {
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  position: relative; /* 必须有这个 */
+  position: relative;
   box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
 
@@ -409,23 +407,22 @@ const setSound = (sound) => {
   background-color: rgba(255,255,255,0.5);
 }
 
-/* 添加圆环边框效果（环绕 sound-thumbnail） */
+
 .sound-item.active::after {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
-  width: 100px; /* 和图片宽高完全一致 */
+  width: 100px;
   height: 100px;
   border: 3px solid rgba(255,255,255,0.9);
   border-radius: 50%;
-  box-sizing: border-box; /* 必须添加，边框将向内缩 */
+  box-sizing: border-box;
   box-shadow: 0 0 5px rgba(0,0,0,0.2);
-  pointer-events: none; /* 防止干扰点击 */
+  pointer-events: none;
 }
 
 
-/* 悬停放大效果 */
 .sound-item:hover {
   transform: scale(1.1);
 }
@@ -446,17 +443,14 @@ const setSound = (sound) => {
   justify-content: center;
   height: 98vh;
   font-family: Arial, sans-serif;
-  margin-top: 0px; /* 让整个内容向下移动 */
-
-
-  /* 背景相关属性 */
+  margin-top: 0px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   position: relative;
   z-index: 1;
 
-  /* 添加半透明遮罩 */
+  /* Add a semi-transparent mask */
   &::after {
     content: "";
     position: absolute;
@@ -475,7 +469,7 @@ const setSound = (sound) => {
   top: 43%;
   left: 50%;
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5)); /* 圆圈阴影 */
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
 }
 
 .timer-text {
@@ -486,7 +480,7 @@ const setSound = (sound) => {
   font-size: 3rem;
   font-weight: bold;
   color: white;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* 文本阴影 */
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .timer-controls {
@@ -497,23 +491,21 @@ const setSound = (sound) => {
 }
 
 
-/* Light mode 按钮样式 */
 .light-button {
   display: flex;
-  flex-direction: column;  /* 让图标和文字垂直排列 */
-  align-items: center;  /* 居中对齐 */
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 5px;  /* 让图标和文字之间有间距 */
-  font-size: 19px;  /* 只影响文字，不影响图标 */
+  gap: 5px;
+  font-size: 19px;
   background: none;
   border: none;
   color: white;
   cursor: pointer;
   transition: transform 0.2s ease-in-out;
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.6); /* 按钮文字阴影 */
-  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5)); /* 图标阴影 */
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
 }
-
 
 .light-button :deep(.el-icon) {
   font-size: 35px !important;
@@ -521,15 +513,12 @@ const setSound = (sound) => {
   height: 35px;
 }
 
-
-/* Light mode 按钮 hover */
 .light-button:hover {
   background: none;
   transform: scale(1.2);
 }
 
 
-/* 控制 el-dialog 的宽度和高度 */
 :deep(.el-dialog) {
   width: 500px !important;
   height: 560px !important;
@@ -537,26 +526,24 @@ const setSound = (sound) => {
   background: rgba(255, 255, 255, 0.75) !important;
   backdrop-filter: blur(3px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  margin-top: 160px !important; /* 调整这个数值来控制下移 */
+  margin-top: 160px !important;
 }
 
 
-/* 修改弹窗标题颜色 */
 :deep(.el-dialog__title) {
   color: #44546A !important;
   font-weight: bold;
   margin: 16px;
   position: relative;
-  top: 15px ; /* 根据需要上下调整 */
+  top: 15px ;
 }
 
 
-/* 让背景不变暗 */
 :deep(.el-overlay) {
-  background: transparent !important; /* 透明化背景 */
+  background: transparent !important;
 }
 
-/* 让 X 按钮变白 */
+
 :deep(.el-dialog__headerbtn .el-icon) {
   color: #44546A !important;
   font-size: 25px;
@@ -564,13 +551,12 @@ const setSound = (sound) => {
   transition: color 0.3s ease-in-out;
 }
 
-/* X 按钮 hover 时变色 */
+
 :deep(.el-dialog__headerbtn:hover .el-icon) {
   color: #607D8B !important;
 }
 
 
-/* 颜色分类 Tabs */
 .color-tabs {
   display: flex;
   gap: 30px;
@@ -584,10 +570,10 @@ const setSound = (sound) => {
   border: none;
   cursor: pointer;
   transition: transform 0.3s ease-in-out;
-  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.1)); /* 图标阴影 */
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
 }
 
-/* 每个 tab 颜色对应背景 */
+/* Each tab color corresponds to the background */
 .color-tab:nth-child(1) { background-color: #C8E6C9; } /* Blue */
 .color-tab:nth-child(2) { background-color: #B3E5FC; } /* Green */
 .color-tab:nth-child(3) { background-color: #B39DDB; } /* Purple */
@@ -598,7 +584,6 @@ const setSound = (sound) => {
   transform: scale(1.2);
 }
 
-/* 选中的 Tab */
 .color-tab.active {
   transform: scale(1.2);
   border: 2px solid #FFFFFF;
@@ -606,25 +591,24 @@ const setSound = (sound) => {
 
 
 .background-options {
-  display: grid;                /* 改用grid布局 */
-  grid-template-columns: repeat(3, 1fr); /* 每行3个 */
-  gap: 8px;                    /* 元素之间的间距 */
-  justify-items: center;        /* 水平居中 */
-  align-items: center;          /* 垂直居中 */
-  padding: 10px;                /* 根据需要微调内边距 */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  justify-items: center;
+  align-items: center;
+  padding: 10px;
 }
 
-/* 让背景名字显示在缩略图下方 */
+
 .bg-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative; /* 必须有这个 */
+  position: relative;
   transition: transform 0.4s ease-in-out;
 }
 
 
-/* 让壁纸名称变白 */
 .bg-name {
   font-size: 15px;
   color: #44546A !important;
@@ -638,7 +622,7 @@ const setSound = (sound) => {
   border-radius: 6px;
   cursor: pointer;
 
-  position: relative; /* 必须有这个 */
+  position: relative;
   box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
 
@@ -653,13 +637,13 @@ const setSound = (sound) => {
   position: absolute;
   top: 10px;
   left: 0;
-  width: 130px; /* 与图片宽度完全一致 */
-  height: 90px; /* 与图片高度完全一致 */
-  border: 3px solid rgba(255,255,255,0.9); /* 白色边框 */
+  width: 130px;
+  height: 90px;
+  border: 3px solid rgba(255,255,255,0.9);
   border-radius: 6px;
   box-sizing: border-box;
   box-shadow: 0 0 5px rgba(0,0,0,0.2);
-  pointer-events: none; /* 防止干扰点击事件 */
+  pointer-events: none;
 }
 
 
